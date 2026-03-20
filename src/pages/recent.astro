@@ -1,0 +1,113 @@
+---
+import Base from '../layouts/Base.astro';
+import { getRawDb as getDb } from '../lib/db';
+
+export const prerender = false;
+
+const db = getDb();
+const url = Astro.url;
+const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
+const perPage = 50;
+const offset = (page - 1) * perPage;
+
+const total = (db.prepare('SELECT COUNT(*) as cnt FROM notices').get() as { cnt: number }).cnt;
+const totalPages = Math.ceil(total / perPage);
+
+const notices = db.prepare(`
+  SELECT n.id, n.notice_date, n.effective_date, n.layoff_type, n.num_employees,
+         n.city, n.state_code, n.industry_name, n.is_ai_related,
+         e.slug as employer_slug, e.name as employer_name
+  FROM notices n
+  JOIN employers e ON n.employer_id = e.id
+  ORDER BY n.effective_date DESC, n.id DESC
+  LIMIT ? OFFSET ?
+`).all(perPage, offset) as {
+  id: number; notice_date: string; effective_date: string; layoff_type: string;
+  num_employees: number; city: string; state_code: string; industry_name: string;
+  is_ai_related: number; employer_slug: string; employer_name: string;
+}[];
+
+const title = `Recent WARN Act Notices — Page ${page}`;
+const description = `Browse the latest mass layoff and plant closing WARN Act notices. ${total.toLocaleString()} total notices filed across all states.`;
+---
+<Base title={title} description={description}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <ol class="flex items-center gap-2">
+        <li><a href="/" class="hover:text-amber-600 dark:hover:text-amber-400">Home</a></li>
+        <li>/</li>
+        <li class="text-gray-800 dark:text-gray-200 font-medium">Recent Notices</li>
+      </ol>
+    </nav>
+
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Recent WARN Act Notices</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">{total.toLocaleString()} total notices · Page {page} of {totalPages}</p>
+      </div>
+      <a href="/search" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm font-medium transition-colors">
+        Search Notices
+      </a>
+    </div>
+
+    <!-- Notices table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              <th class="px-4 py-3 text-left">Company</th>
+              <th class="px-4 py-3 text-left">Type</th>
+              <th class="px-4 py-3 text-right">Workers</th>
+              <th class="px-4 py-3 text-left">State</th>
+              <th class="px-4 py-3 text-left">Industry</th>
+              <th class="px-4 py-3 text-left">Effective Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {notices.map(n => (
+              <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <td class="px-4 py-3">
+                  <a href={`/employer/${n.employer_slug}`} class="text-amber-600 dark:text-amber-400 hover:underline font-medium">{n.employer_name}</a>
+                  {n.is_ai_related ? <span class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded">AI</span> : null}
+                  {n.city ? <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{n.city}</div> : null}
+                </td>
+                <td class="px-4 py-3">
+                  <span class={`px-2 py-0.5 rounded-full text-xs font-medium ${n.layoff_type === 'closure' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'}`}>
+                    {n.layoff_type === 'closure' ? 'Closure' : 'Layoff'}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100">{n.num_employees.toLocaleString()}</td>
+                <td class="px-4 py-3">
+                  {n.state_code ? <a href={`/state/${n.state_code.toLowerCase()}`} class="text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400">{n.state_code}</a> : '—'}
+                </td>
+                <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{n.industry_name || '—'}</td>
+                <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{n.effective_date ? n.effective_date.split('T')[0] : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    {totalPages > 1 && (
+      <div class="flex items-center justify-center gap-2">
+        {page > 1 && <a href={`/recent?page=${page - 1}`} class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm">← Previous</a>}
+        <span class="text-sm text-gray-500 dark:text-gray-400 px-4">Page {page} of {totalPages}</span>
+        {page < totalPages && <a href={`/recent?page=${page + 1}`} class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm">Next →</a>}
+      </div>
+    )}
+  </div>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "WARN Act Notices — Recent Filings",
+    "description": description,
+    "url": "https://plainlayoffs.com/recent",
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "creator": { "@type": "Organization", "name": "PlainLayoffs" }
+  })} />
+</Base>

@@ -1,0 +1,324 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export const prerender = true;
+
+const guides: Record<string, {
+  title: string;
+  description: string;
+  date: string;
+  readTime: string;
+  content: string;
+}> = {
+  'warn-act-employee-rights': {
+    title: 'Your Rights Under the WARN Act: What Every Employee Should Know',
+    description: 'The federal WARN Act entitles workers to 60 days advance notice before a mass layoff or plant closing. Learn exactly what you are owed, what exceptions exist, and what to do if your employer violates the law.',
+    date: '2025-01-15',
+    readTime: '8 min read',
+    content: `
+<h2>What Is the WARN Act?</h2>
+<p>The Worker Adjustment and Retraining Notification (WARN) Act is a federal law enacted in 1988 that protects workers, their families, and communities by requiring most employers with 100 or more employees to provide 60 calendar days advance notice of plant closings and mass layoffs. The law gives workers and their families time to prepare for job transitions, seek new employment, or enroll in retraining programs.</p>
+
+<p>Administered by the U.S. Department of Labor, WARN Act notifications must be submitted to state workforce agencies (called Rapid Response units) and local elected officials at the same time workers are notified. These public filings become the primary data source for mass layoff tracking.</p>
+
+<h2>Who Is Covered?</h2>
+<p>The federal WARN Act applies to employers with 100 or more full-time employees, or 100 or more employees (including part-time) who work a combined total of at least 4,000 hours per week. Part-time workers (those averaging fewer than 20 hours per week or employed for fewer than 6 of the 12 months before notice is required) are generally not counted toward the thresholds.</p>
+
+<p>The law covers:</p>
+<ul>
+  <li><strong>Plant closings</strong> — permanent or temporary shutdown of a single site of employment affecting 50 or more full-time employees</li>
+  <li><strong>Mass layoffs</strong> — reductions not resulting from plant closings that affect 500+ full-time employees, or 50–499 full-time employees if they represent at least 33% of the workforce at a single site</li>
+</ul>
+
+<h2>What Notice Are You Entitled To?</h2>
+<p>Covered employees are entitled to 60 calendar days of notice before the termination or layoff begins. This notice must:</p>
+<ul>
+  <li>Be in writing (no minimum length required)</li>
+  <li>State clearly whether the action is permanent or temporary</li>
+  <li>Identify the expected date of first separations and the overall schedule</li>
+  <li>Provide the job titles and number of affected positions</li>
+  <li>Include the name and phone number of a company official to contact for further information</li>
+</ul>
+
+<p>Unions representing affected workers must also receive notice with additional information including the name and address of each affected employee and the bumping rights that may affect each worker.</p>
+
+<h2>Exceptions to the 60-Day Requirement</h2>
+<p>Employers may give less than 60 days notice under three limited exceptions, but must still provide as much notice as practicable and include a written statement explaining which exception applies:</p>
+
+<h3>Faltering Company Exception</h3>
+<p>Applies when a company was actively seeking capital or business at the time notice was required, there was a realistic possibility this capital or business would have been obtained, and the notice would have precluded the employer from obtaining the capital or business needed to avoid the closing.</p>
+
+<h3>Unforeseeable Business Circumstances Exception</h3>
+<p>Applies to plant closings or mass layoffs caused by business circumstances that were not reasonably foreseeable at the time 60-day notice would have been required — such as the sudden loss of a major customer, or an unexpected economic crisis.</p>
+
+<h3>Natural Disaster Exception</h3>
+<p>Applies when a plant closing or mass layoff is a direct result of a natural disaster such as a flood, earthquake, drought, storm, tidal wave, or similar natural disaster. This exception is narrowly construed and does not generally extend to the economic consequences of a natural disaster.</p>
+
+<h2>Penalties for WARN Act Violations</h2>
+<p>Employers who violate the WARN Act are liable to each affected employee for:</p>
+<ul>
+  <li><strong>Back pay</strong> — one day's pay for each day of violation, up to 60 days</li>
+  <li><strong>Benefits</strong> — the value of medical expenses actually incurred, and any other benefits owed under an employee benefit plan</li>
+  <li><strong>Civil penalties</strong> — up to $500 per day of violation for failure to notify the local government (capped at $30,000 total per violation)</li>
+</ul>
+
+<p>The employer can reduce liability if it pays all back pay and benefits due within 3 weeks after the plant closing or layoff. Workers can sue in federal district court, and successful plaintiffs may recover attorneys' fees.</p>
+
+<h2>State "Mini-WARN" Laws</h2>
+<p>Several states have enacted their own WARN-like laws with broader coverage:</p>
+<ul>
+  <li><strong>California</strong> — Covers employers with 75+ employees; threshold is 50+ workers laid off within 30 days; no business exception for closures</li>
+  <li><strong>New York</strong> — Covers employers with 50+ employees; notice period extended to 90 days</li>
+  <li><strong>Illinois</strong> — Covers employers with 75+ employees; 60-day notice required</li>
+  <li><strong>New Jersey</strong> — No minimum size threshold for employers; requires 60-day notice and severance pay equal to one week per year of service</li>
+  <li><strong>Iowa</strong> — Covers employers with 25+ employees</li>
+</ul>
+
+<h2>What Should You Do If You Receive a WARN Notice?</h2>
+<ol>
+  <li><strong>Note the dates</strong> — verify that 60 days (or state equivalent) of notice was actually given</li>
+  <li><strong>Review your rights</strong> — check whether your state has a mini-WARN law with different or additional protections</li>
+  <li><strong>Contact your state's Rapid Response program</strong> — these programs offer free reemployment assistance, UI information, and job training referrals</li>
+  <li><strong>File for unemployment insurance</strong> — apply immediately; don't wait until your last day of work</li>
+  <li><strong>Consult an employment attorney</strong> — if you believe your employer provided insufficient notice or is otherwise in violation of WARN</li>
+  <li><strong>Negotiate severance</strong> — WARN notice does not require severance pay (except in New Jersey), but many employers offer it; your leverage is highest before you sign anything</li>
+</ol>
+
+<h2>How to File a WARN Act Complaint</h2>
+<p>Unlike many federal employment laws, the WARN Act does not have a federal agency enforcement mechanism. Instead, workers must bring a private lawsuit in U.S. District Court within the statute of limitations (typically 3 years). Class action lawsuits are common when large numbers of workers are affected. Several plaintiff-side law firms specialize in WARN Act class actions and take cases on contingency.</p>
+
+<p>Your state's department of labor may also investigate violations under state WARN laws, which can be a faster enforcement path.</p>
+
+<h2>Resources</h2>
+<ul>
+  <li>U.S. Department of Labor WARN Act guidance: <a href="https://www.dol.gov/agencies/eta/layoffs/warn" rel="noopener noreferrer" target="_blank">dol.gov/agencies/eta/layoffs/warn</a></li>
+  <li>State Rapid Response programs: contact your state workforce agency</li>
+  <li>PlainLayoffs WARN Act data: <a href="https://plainlayoffs.com/recent">recent notices</a> and <a href="https://plainlayoffs.com/states/">state-by-state data</a></li>
+</ul>
+    `
+  },
+  'surviving-a-layoff': {
+    title: 'What To Do After a Layoff: A Complete Action Plan',
+    description: 'Getting laid off is overwhelming. This step-by-step guide covers everything from the first 48 hours to your long-term career rebuild — finances, benefits, job search, and emotional recovery.',
+    date: '2025-02-01',
+    readTime: '10 min read',
+    content: `
+<h2>The First 48 Hours</h2>
+<p>The immediate aftermath of a layoff brings a flood of emotions — shock, anger, fear, and sometimes even relief. Before acting on any of them, take a breath. The decisions you make in the first 48 hours matter, and most are reversible if you move carefully.</p>
+
+<h3>Do Not Sign Anything Immediately</h3>
+<p>Your employer will likely present a severance agreement and ask you to sign it. Unless they are threatening to rescind the offer, you have time — usually 21 days for standard agreements, 45 days if the layoff affects multiple employees over 40 (under the ADEA/Older Workers Benefit Protection Act). Use that time.</p>
+
+<h3>Request Everything in Writing</h3>
+<p>Ask for written confirmation of your last day of employment, the severance amount and terms, your COBRA continuation coverage rights, and information about any unvested equity or benefits. Get the contact information for HR and payroll for future questions.</p>
+
+<h3>Understand Your Final Paycheck</h3>
+<p>Most states require employers to pay all earned wages — including accrued vacation — in your final paycheck or within a few days. Check your state's rules. If you received a WARN Act notice, ensure you received the full 60 days of pay you are entitled to.</p>
+
+<h2>Financial Stabilization (Week 1-2)</h2>
+
+<h3>File for Unemployment Insurance Immediately</h3>
+<p>Unemployment insurance (UI) provides temporary income replacement — typically 40-50% of prior wages, up to a weekly maximum that varies by state. File the day you are laid off or your notice expires. There is typically a one-week waiting period before benefits begin, so every day of delay costs you money. File online through your state's workforce agency website.</p>
+
+<p>UI benefits typically last 26 weeks, though extensions may be available in times of high unemployment. Benefits are taxable income — elect to have taxes withheld to avoid a bill in April.</p>
+
+<h3>Assess Your Runway</h3>
+<p>Before panicking, calculate your actual runway. Add up all income sources: severance, UI benefits, spouse/partner income, and any investment income. Then list fixed monthly expenses. Divide savings by the monthly shortfall. Most people are surprised to find they have 3-6 months of flexibility even without severance.</p>
+
+<h3>Adjust Your Budget Immediately</h3>
+<p>Cut discretionary spending now, even if you feel financially comfortable. The goal isn't to suffer — it's to extend your runway so you can accept the right offer rather than the first one.</p>
+<ul>
+  <li>Cancel or pause subscriptions you don't use daily</li>
+  <li>Reduce dining out and entertainment (not eliminate — mental health matters)</li>
+  <li>Defer major purchases</li>
+  <li>Contact lenders proactively if you anticipate difficulty — most have hardship programs</li>
+</ul>
+
+<h3>COBRA and Health Insurance</h3>
+<p>COBRA allows you to continue your employer's health coverage for up to 18 months (36 for certain qualifying events). The catch: you pay the full premium, including the employer's portion. For a family plan, this can exceed $2,000 per month.</p>
+
+<p>Compare COBRA against marketplace options at healthcare.gov. A qualifying life event (job loss) lets you enroll outside open enrollment. If your income will drop significantly, you may qualify for subsidized marketplace coverage or even Medicaid. For many laid-off workers, marketplace plans are substantially cheaper than COBRA.</p>
+
+<h2>The Job Search (Week 2 Onward)</h2>
+
+<h3>Do Not Rush</h3>
+<p>The instinct to accept the first offer is understandable but often costly. Unless your runway is genuinely short, give yourself permission to be selective. A job change made under duress typically results in a role that doesn't fit well — and another job search in 18 months.</p>
+
+<h3>Refresh Your Materials Before Applying</h3>
+<p>Before sending a single application, update your resume, LinkedIn profile, and any work samples. Tailor your resume to the roles you're targeting — not the roles you've had. Focus each bullet on outcomes (reduced costs by X%, grew revenue by Y%) not activities ("responsible for").</p>
+
+<h3>Network First, Apply Second</h3>
+<p>Roughly 70-80% of jobs are filled through referrals before they are ever posted publicly. Reach out to former colleagues, managers, clients, and professional acquaintances. Be specific: "I'm looking for senior product management roles at Series B-D SaaS companies, particularly in fintech or HR tech — do you know anyone I should talk to?"</p>
+
+<h3>Target the Right Companies</h3>
+<p>Research companies that are growing, not contracting. Check recent WARN Act filings (plainlayoffs.com) to avoid companies in the middle of workforce reductions. Look at recent funding rounds, hiring news, and LinkedIn growth data.</p>
+
+<h3>Negotiate the Offer</h3>
+<p>Most employers expect negotiation. The window for negotiation closes the moment you accept verbally or in writing. Key areas to negotiate include: base salary, signing bonus (especially if you are walking away from unvested equity), remote work flexibility, vacation, and title. Do your research using salary data from WageDex, Glassdoor, Levels.fyi, and similar sources.</p>
+
+<h2>Emotional Recovery</h2>
+<p>Layoffs are stressful even when you know they are not personal — which they almost never are. Studies consistently find job loss ranks among the most stressful life events, comparable to divorce or serious illness.</p>
+
+<h3>Protect Your Routine</h3>
+<p>The loss of structure is often as disorienting as the loss of income. Build a new schedule immediately: set a wake time, block job search hours, schedule exercise, and plan something social each week. Treat the job search like a job — with defined hours and end times.</p>
+
+<h3>Talk About It</h3>
+<p>Shame and secrecy compound the stress. Most people in your network have been laid off — especially in technology and finance. Being open about your search dramatically accelerates it and reduces the psychological burden of "hiding" something.</p>
+
+<h3>Use Available Resources</h3>
+<p>Many states fund free career counseling and job placement services through Rapid Response programs — activated specifically when mass layoffs occur. If you received a WARN Act notice, your employer may have information about these services. They are often excellent and completely underutilized.</p>
+
+<h2>Severance Negotiation</h2>
+<p>Federal law does not require severance pay (except for WARN Act violations). Whether you can negotiate depends on your leverage, your tenure, and the circumstances of the layoff.</p>
+
+<p>Leverage increases if: you have specialized knowledge needed for transition, the employer violated WARN Act notice requirements, you are over 40 (ADEA considerations), or you have evidence of discrimination in the selection process. Even without obvious leverage, many employers will increase a severance offer simply because you asked — especially if you are willing to sign a release of claims.</p>
+
+<p>Before signing any severance agreement, have it reviewed by an employment attorney. Initial consultations are often free or low-cost, and the review frequently identifies additional negotiating points.</p>
+    `
+  },
+  'understanding-mass-layoffs': {
+    title: 'Understanding Mass Layoffs: Causes, Trends, and Economic Impact',
+    description: 'Mass layoffs are a recurring feature of the US economy. This guide explains the business drivers behind workforce reductions, who bears the burden, and what WARN Act data reveals about layoff cycles.',
+    date: '2025-03-01',
+    readTime: '9 min read',
+    content: `
+<h2>What Counts as a Mass Layoff?</h2>
+<p>In everyday usage, "mass layoff" describes any large-scale workforce reduction. Under the federal WARN Act, the legal definition is more specific: a reduction of employment at a single site affecting 500 or more full-time workers, or 50–499 full-time workers if they constitute at least one-third of the full-time workforce. A "plant closing" is the permanent or temporary shutdown of a site affecting 50 or more full-time workers.</p>
+
+<p>The Bureau of Labor Statistics (BLS) defines mass layoffs separately for statistical purposes as events affecting 50 or more workers from a single employer who file initial claims for unemployment insurance during a 5-week period. The WARN Act definition and the BLS definition differ, which is why WARN Act data and BLS mass layoff statistics don't always align.</p>
+
+<h2>Major Causes of Mass Layoffs</h2>
+
+<h3>Business Cycle Downturns</h3>
+<p>The most common driver of mass layoffs is economic contraction. When demand falls, companies reduce headcount to align costs with revenue. The 2008-2009 financial crisis produced the largest wave of layoffs in decades — millions of WARN Act notices across banking, manufacturing, real estate, and construction. The COVID-19 pandemic triggered another historic wave in hospitality, travel, and retail in 2020.</p>
+
+<h3>Restructuring and Cost Reduction</h3>
+<p>Companies routinely restructure even during economic expansions. Restructuring layoffs often follow mergers and acquisitions (elimination of duplicate functions), strategic pivots (exiting business lines or geographies), and pressure from activist investors or new management to reduce the cost structure. These layoffs frequently appear in WARN Act data even when the overall economy is growing.</p>
+
+<h3>Offshoring and Automation</h3>
+<p>Manufacturing mass layoffs throughout the 1990s and 2000s were heavily driven by offshoring — moving production to lower-cost countries. More recently, automation and artificial intelligence have accelerated workforce reductions in sectors from manufacturing to financial services to customer support. The technology sector's 2022-2024 layoff cycle was partly driven by post-pandemic overcorrection and partly by AI-driven productivity improvements enabling smaller teams to do the same work.</p>
+
+<h3>Industry-Specific Disruption</h3>
+<p>Some sectors experience structural layoffs unrelated to the broader economy. Legacy media has shed workers continuously since the rise of digital advertising. Traditional retail contracted as e-commerce grew. Coal mining employment declined for decades as natural gas and renewables displaced coal in electricity generation. These structural shifts produce persistent WARN Act activity in affected industries.</p>
+
+<h2>Who Bears the Burden?</h2>
+<p>Research consistently shows that the economic burden of mass layoffs falls disproportionately on certain groups:</p>
+
+<h3>Older Workers</h3>
+<p>Workers over 50 face significantly longer unemployment spells after layoffs. Ageism in hiring, higher salary expectations, and skills gaps in fast-moving fields all contribute. Reemployment wages for older workers who find new jobs are typically 20-25% lower than pre-layoff wages.</p>
+
+<h3>Blue-Collar and Service Workers</h3>
+<p>Manufacturing and service sector workers have fewer transferable skills and weaker professional networks than white-collar workers, making reemployment harder. Plant closings in manufacturing communities often devastate local economies for years — the closure of a large employer creates ripple effects through local suppliers, retailers, and service providers.</p>
+
+<h3>Workers Without College Degrees</h3>
+<p>The gap in reemployment outcomes between workers with and without college degrees has widened over time. Workers without degrees are more likely to take wage cuts upon reemployment and are more likely to exit the labor force entirely after extended unemployment.</p>
+
+<h2>Geographic Concentration</h2>
+<p>Mass layoffs are geographically concentrated. States with large technology sectors (California, Washington, New York, Texas) generate the highest absolute numbers of WARN Act notices. Manufacturing-heavy states (Michigan, Ohio, Indiana, Pennsylvania) experience acute layoff cycles during recessions. Retail and hospitality layoffs are more geographically dispersed but concentrate in major metropolitan areas.</p>
+
+<p>California consistently leads in WARN Act filings due to its size, its mandatory reporting requirement for employers with 75+ employees (lower than the federal threshold of 100), and its concentration of tech, entertainment, and financial services employers. Understanding state-level variation requires accounting for these differences in reporting thresholds.</p>
+
+<h2>The Tech Layoff Cycle (2022-2024)</h2>
+<p>The technology sector's 2022-2024 layoff cycle was historically unusual. Major tech employers — Amazon, Meta, Google, Microsoft, and hundreds of smaller companies — eliminated over 300,000 jobs in the US between late 2022 and early 2024, even though the overall US economy remained relatively healthy.</p>
+
+<p>The proximate cause was over-hiring during the 2020-2021 pandemic boom. Remote work adoption, e-commerce acceleration, and cloud infrastructure investment drove aggressive hiring that proved unsustainable as growth normalized. The Federal Reserve's interest rate increases also tightened venture capital funding, forcing startup layoffs across the sector.</p>
+
+<p>The tech layoffs were notable for their concentration in well-compensated roles — software engineers, product managers, and data scientists — producing unusual unemployment statistics as highly educated, well-networked workers sought new positions simultaneously.</p>
+
+<h2>Economic Impact of Mass Layoffs</h2>
+
+<h3>Direct Effects</h3>
+<p>The direct economic impact includes lost wages and benefits for affected workers, reduced consumer spending in affected communities, and increased state unemployment insurance costs.</p>
+
+<h3>Multiplier Effects</h3>
+<p>Economists estimate employment multipliers of 1.5x to 3x for job losses in traded sectors (manufacturing, tech) — meaning each job lost in these sectors eliminates an additional 0.5 to 2 jobs in local service sectors through reduced spending. Plant closings in manufacturing communities have particularly large multiplier effects.</p>
+
+<h3>Corporate Outcomes</h3>
+<p>The relationship between mass layoffs and corporate performance is mixed. Layoffs typically reduce costs in the near term, supporting short-term profitability. But research shows that mass layoffs often damage long-term performance through loss of institutional knowledge, reduced innovation, weakened morale among remaining workers, and reputational damage affecting future hiring. Companies that restructure through targeted cuts tend to outperform those that rely on broad workforce reductions.</p>
+
+<h2>WARN Act Data Limitations</h2>
+<p>WARN Act data is a useful but incomplete picture of layoff activity. Key limitations include:</p>
+<ul>
+  <li><strong>Coverage threshold</strong> — employers with fewer than 100 employees are not required to file, excluding small and mid-size business layoffs</li>
+  <li><strong>Voluntary compliance</strong> — enforcement is through private lawsuits, not regulatory inspection; some employers don't file even when required</li>
+  <li><strong>State variation</strong> — states have different reporting requirements and different agencies collecting data, making cross-state comparisons difficult</li>
+  <li><strong>Timing</strong> — notices are filed 60 days before the event, meaning WARN data leads actual layoff dates</li>
+  <li><strong>Definitional gaps</strong> — temporary layoffs, early retirements, and voluntary separations typically don't trigger WARN filing requirements</li>
+</ul>
+
+<p>For a more complete picture of labor market conditions, WARN Act data should be combined with BLS JOLTS (Job Openings and Labor Turnover Survey) data, state unemployment insurance filings, and sectoral employment reports.</p>
+    `
+  }
+};
+
+const { slug } = Astro.params;
+const guide = slug ? guides[slug] : undefined;
+
+if (!guide) {
+  return Astro.redirect('/404');
+}
+
+export async function getStaticPaths() {
+  return [
+    { params: { slug: 'warn-act-employee-rights' } },
+    { params: { slug: 'surviving-a-layoff' } },
+    { params: { slug: 'understanding-mass-layoffs' } },
+  ];
+}
+---
+<Base title={guide.title} description={guide.description}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <ol class="flex items-center gap-2">
+        <li><a href="/" class="hover:text-amber-600 dark:hover:text-amber-400">Home</a></li>
+        <li>/</li>
+        <li class="text-gray-800 dark:text-gray-200 font-medium">Guide</li>
+      </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mb-4">
+        <time datetime={guide.date}>{new Date(guide.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+        <span>·</span>
+        <span>{guide.readTime}</span>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 leading-tight">{guide.title}</h1>
+      <p class="text-xl text-gray-600 dark:text-gray-400 leading-relaxed">{guide.description}</p>
+    </div>
+
+    <!-- Content -->
+    <article class="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-a:text-amber-600 dark:prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline prose-li:my-1 max-w-none">
+      <Fragment set:html={guide.content} />
+    </article>
+
+    <!-- Footer -->
+    <div class="mt-10 pt-8 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex flex-wrap gap-4">
+        <a href="/recent" class="text-amber-600 dark:text-amber-400 hover:underline text-sm">Browse Recent WARN Notices →</a>
+        <a href="/states/" class="text-amber-600 dark:text-amber-400 hover:underline text-sm">View by State →</a>
+        <a href="/rankings" class="text-amber-600 dark:text-amber-400 hover:underline text-sm">Top Employer Rankings →</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": guide.title,
+    "description": guide.description,
+    "datePublished": guide.date,
+    "dateModified": guide.date,
+    "author": { "@type": "Organization", "name": "PlainLayoffs" },
+    "publisher": { "@type": "Organization", "name": "PlainLayoffs", "url": "https://plainlayoffs.com" },
+    "url": `https://plainlayoffs.com/guides/${slug}`,
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://plainlayoffs.com" },
+        { "@type": "ListItem", "position": 2, "name": guide.title }
+      ]
+    }
+  })} />
+</Base>

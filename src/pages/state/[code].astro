@@ -1,0 +1,138 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getState, getStateEmployers, getStateNotices } from '../../lib/db';
+
+const { code } = Astro.params;
+if (!code) return Astro.redirect('/states/');
+const stateCode = code.toUpperCase();
+
+const state = await getState(stateCode);
+if (!state) return Astro.redirect('/states/');
+
+const employers = await getStateEmployers(stateCode, 30);
+const notices = await getStateNotices(stateCode, 30);
+
+function formatDate(d: string | null) {
+  if (!d) return '';
+  return new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+const title = `${state.name} WARN Act Layoffs — PlainLayoffs`;
+const desc = `${state.name} mass layoff data: ${state.total_notices} WARN notices affecting ${state.total_workers.toLocaleString()} workers. ${state.name} WARN threshold: ${state.warn_threshold}+ employees.`;
+---
+
+<Base title={title} description={desc} breadcrumbs={[
+  { name: 'Home', href: '/' },
+  { name: 'States', href: '/states/' },
+  { name: state.name },
+]}>
+  <div class="container py-8">
+    <nav class="text-sm text-[var(--color-muted)] mb-3">
+      <a href="/" class="hover:text-[var(--color-foreground)]">Home</a>
+      <span class="mx-2">/</span>
+      <a href="/states/" class="hover:text-[var(--color-foreground)]">States</a>
+      <span class="mx-2">/</span>
+      <span>{state.name}</span>
+    </nav>
+    
+    <div class="flex items-start justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold">{state.name}</h1>
+        <p class="text-[var(--color-muted)] mt-1">WARN Act Mass Layoff Data</p>
+      </div>
+      <span class="text-4xl font-bold text-amber-200 dark:text-amber-900">{stateCode}</span>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{state.total_workers.toLocaleString()}</p>
+        <p class="text-sm text-[var(--color-muted)]">Total Workers</p>
+      </div>
+      <div class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <p class="text-2xl font-bold">{state.total_notices}</p>
+        <p class="text-sm text-[var(--color-muted)]">Notices Filed</p>
+      </div>
+      <div class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <p class="text-2xl font-bold">{state.warn_threshold}+</p>
+        <p class="text-sm text-[var(--color-muted)]">WARN Threshold</p>
+      </div>
+      <div class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <p class="text-2xl font-bold">{state.latest_notice_date ? new Date(state.latest_notice_date + 'T12:00:00Z').getFullYear() : '—'}</p>
+        <p class="text-sm text-[var(--color-muted)]">Latest Notice</p>
+      </div>
+    </div>
+
+    <!-- About WARN threshold -->
+    <div class="mb-8 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800">
+      <p class="text-sm text-amber-800 dark:text-amber-300">
+        <strong>{state.name} WARN threshold:</strong> Employers must file WARN notices when laying off {state.warn_threshold}+ workers.
+        {state.warn_threshold < 100 ? ` ${state.name} has a stricter threshold than the federal 100-employee minimum.` : ' This matches the federal WARN Act threshold.'}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Top employers -->
+      {employers.length > 0 && (
+        <div>
+          <h2 class="text-xl font-bold mb-4">Top Employers by Impact</h2>
+          <div class="space-y-2">
+            {employers.map((emp, i) => (
+              <a href={`/employer/${emp.slug}`} class="flex items-center gap-3 p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] hover:border-amber-400 transition-colors group">
+                <span class="text-sm text-[var(--color-muted)] w-6 shrink-0">{i+1}</span>
+                <span class="flex-1 text-sm font-medium text-[var(--color-foreground)] group-hover:text-amber-600 dark:group-hover:text-amber-400 truncate">{emp.name}</span>
+                <span class="text-sm font-semibold text-amber-600 dark:text-amber-400 shrink-0">{emp.total_workers.toLocaleString()}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- Recent notices -->
+      {notices.length > 0 && (
+        <div>
+          <h2 class="text-xl font-bold mb-4">Recent Notices</h2>
+          <div class="space-y-2">
+            {notices.map(notice => (
+              <div class="p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex-1 min-w-0">
+                    {notice.employer_slug ? (
+                      <a href={`/employer/${notice.employer_slug}`} class="text-sm font-medium hover:text-amber-600 dark:hover:text-amber-400 truncate block">{notice.employer_name || 'Unknown'}</a>
+                    ) : (
+                      <span class="text-sm font-medium truncate block">{notice.employer_name || 'Unknown'}</span>
+                    )}
+                    <p class="text-xs text-[var(--color-muted)]">{notice.city && `${notice.city} · `}{formatDate(notice.notice_date)}</p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <span class="text-sm font-semibold text-amber-600 dark:text-amber-400">{notice.workers_affected.toLocaleString()}</span>
+                    <p class="text-xs text-[var(--color-muted)]">workers</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+
+    <!-- Cross-links -->
+    <div class="mt-8 p-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+      <h3 class="font-semibold mb-3">Related Data for {state.name}</h3>
+      <div class="flex flex-wrap gap-4 text-sm">
+        <a href={`https://plainlabor.com/state/${stateCode.toLowerCase()}`} target="_blank" rel="noopener" class="text-amber-600 dark:text-amber-400 hover:underline">Job market conditions →</a>
+        <a href={`https://wagedex.com/state/${stateCode.toLowerCase()}`} target="_blank" rel="noopener" class="text-[var(--color-muted)] hover:text-[var(--color-foreground)]">Salary data →</a>
+        <a href={`https://plaincrime.com/state/${stateCode.toLowerCase()}`} target="_blank" rel="noopener" class="text-[var(--color-muted)] hover:text-[var(--color-foreground)]">Economic context →</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": `${state.name} WARN Act Layoff Data`,
+    "description": desc,
+    "url": new URL(Astro.url.pathname, 'https://plainlayoffs.com').href,
+    "spatialCoverage": { "@type": "Place", "name": state.name, "address": { "@type": "PostalAddress", "addressRegion": stateCode, "addressCountry": "US" } }
+  })} />
+</Base>

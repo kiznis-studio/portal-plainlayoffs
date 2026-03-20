@@ -1,0 +1,141 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getEmployer, getEmployerNotices } from '../../lib/db';
+
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect('/employers/');
+
+const employer = await getEmployer(slug);
+if (!employer) return Astro.redirect('/employers/');
+
+const notices = await getEmployerNotices(employer.id);
+
+function formatDate(d: string | null) {
+  if (!d) return '';
+  return new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Group notices by year
+const byYear: Record<number, typeof notices> = {};
+for (const n of notices) {
+  const yr = parseInt(n.notice_date?.substring(0,4) || '0');
+  if (!byYear[yr]) byYear[yr] = [];
+  byYear[yr].push(n);
+}
+const years = Object.keys(byYear).map(Number).sort((a,b) => b-a);
+
+const statesSet = new Set(notices.map(n => n.state));
+const states = [...statesSet].sort();
+
+const title = `${employer.name} Layoff History — WARN Act Notices`;
+const desc = `${employer.name} WARN Act layoff history: ${employer.total_notices} notice${employer.total_notices !== 1 ? 's' : ''}, ${employer.total_workers.toLocaleString()} workers affected across ${employer.state_count} state${employer.state_count !== 1 ? 's' : ''}.`;
+---
+
+<Base title={title} description={desc} breadcrumbs={[
+  { name: 'Home', href: '/' },
+  { name: 'Employers', href: '/employers/' },
+  { name: employer.name },
+]}>
+  <div class="container py-8 max-w-4xl">
+    <!-- Header -->
+    <div class="mb-8">
+      <nav class="text-sm text-[var(--color-muted)] mb-3">
+        <a href="/" class="hover:text-[var(--color-foreground)]">Home</a>
+        <span class="mx-2">/</span>
+        <a href="/employers/" class="hover:text-[var(--color-foreground)]">Employers</a>
+        <span class="mx-2">/</span>
+        <span>{employer.name}</span>
+      </nav>
+      <h1 class="text-3xl font-bold text-[var(--color-foreground)]">{employer.name}</h1>
+      <p class="text-[var(--color-muted)] mt-2">WARN Act Layoff History</p>
+    </div>
+
+    <!-- Stats cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{employer.total_workers.toLocaleString()}</p>
+        <p class="text-sm text-[var(--color-muted)]">Total Workers</p>
+      </div>
+      <div class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <p class="text-2xl font-bold">{employer.total_notices}</p>
+        <p class="text-sm text-[var(--color-muted)]">WARN Notices</p>
+      </div>
+      <div class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <p class="text-2xl font-bold">{employer.state_count}</p>
+        <p class="text-sm text-[var(--color-muted)]">States</p>
+      </div>
+      <div class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <p class="text-2xl font-bold">{employer.latest_notice_date ? new Date(employer.latest_notice_date + 'T12:00:00Z').getFullYear() : '—'}</p>
+        <p class="text-sm text-[var(--color-muted)]">Latest Notice</p>
+      </div>
+    </div>
+
+    <!-- Profile info -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="md:col-span-2 p-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <h2 class="font-semibold mb-4">Employer Profile</h2>
+        <dl class="grid grid-cols-2 gap-3 text-sm">
+          <div><dt class="text-[var(--color-muted)]">Primary State</dt><dd class="font-medium">{employer.primary_state ? <a href={`/state/${employer.primary_state}`} class="text-amber-600 dark:text-amber-400 hover:underline">{employer.primary_state}</a> : '—'}</dd></div>
+          <div><dt class="text-[var(--color-muted)]">Primary Industry</dt><dd class="font-medium">{employer.primary_industry || '—'}</dd></div>
+          <div><dt class="text-[var(--color-muted)]">First Notice</dt><dd class="font-medium">{formatDate(employer.first_notice_date)}</dd></div>
+          <div><dt class="text-[var(--color-muted)]">Latest Notice</dt><dd class="font-medium">{formatDate(employer.latest_notice_date)}</dd></div>
+          <div class="col-span-2"><dt class="text-[var(--color-muted)] mb-1">States with Layoffs</dt><dd class="flex flex-wrap gap-1">{states.map(s => <a href={`/state/${s}`} class="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded hover:bg-amber-200 dark:hover:bg-amber-800/40">{s}</a>)}</dd></div>
+        </dl>
+      </div>
+
+      <!-- Cross-links -->
+      <div class="p-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <h2 class="font-semibold mb-3">Related Data</h2>
+        <ul class="space-y-2 text-sm">
+          {employer.primary_state && <li><a href={`https://plainlabor.com/state/${employer.primary_state.toLowerCase()}`} target="_blank" rel="noopener" class="text-amber-600 dark:text-amber-400 hover:underline">Job market in {employer.primary_state} →</a></li>}
+          {employer.primary_industry && <li><a href="https://plainworkforce.com" target="_blank" rel="noopener" class="text-[var(--color-muted)] hover:text-[var(--color-foreground)]">AI displacement risk →</a></li>}
+          <li><a href={`https://plainsafetyscore.com`} target="_blank" rel="noopener" class="text-[var(--color-muted)] hover:text-[var(--color-foreground)]">Employer safety record →</a></li>
+          <li><a href={`https://plainworker.com`} target="_blank" rel="noopener" class="text-[var(--color-muted)] hover:text-[var(--color-foreground)]">OSHA violations →</a></li>
+          <li><a href={`https://wagedex.com`} target="_blank" rel="noopener" class="text-[var(--color-muted)] hover:text-[var(--color-foreground)]">Salary data for this sector →</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Notice timeline -->
+    <div class="mb-8">
+      <h2 class="text-xl font-bold mb-5">WARN Notice History</h2>
+      {years.map(yr => (
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3 text-amber-600 dark:text-amber-400">{yr}</h3>
+          <div class="space-y-3">
+            {byYear[yr].map(notice => (
+              <div class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class={`text-xs px-2 py-0.5 rounded-full font-medium ${notice.type === 'closure' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>
+                        {notice.type === 'closure' ? 'Facility Closure' : 'Mass Layoff'}
+                      </span>
+                      {notice.ai_caused === 1 && <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">AI-Related</span>}
+                    </div>
+                    <p class="text-sm text-[var(--color-muted)] mt-1">{notice.city && `${notice.city}, `}{notice.state} {notice.industry && `· ${notice.industry}`}</p>
+                    {notice.effective_date && <p class="text-xs text-[var(--color-muted)] mt-0.5">Effective: {formatDate(notice.effective_date)}</p>}
+                  </div>
+                  <div class="text-right shrink-0">
+                    <p class="text-xl font-bold text-amber-600 dark:text-amber-400">{notice.workers_affected.toLocaleString()}</p>
+                    <p class="text-xs text-[var(--color-muted)]">workers</p>
+                    <p class="text-xs text-[var(--color-muted)] mt-1">Filed {formatDate(notice.notice_date)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": `${employer.name} WARN Act Layoff History`,
+    "description": desc,
+    "url": new URL(Astro.url.pathname, 'https://plainlayoffs.com').href,
+    "creator": { "@type": "Organization", "name": "PlainLayoffs" }
+  })} />
+</Base>

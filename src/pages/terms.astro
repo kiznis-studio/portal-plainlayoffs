@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+export const prerender = true;
+const title = 'Terms of Use — PlainLayoffs';
+const description = 'PlainLayoffs terms of use — conditions governing your use of this website and its data.';
+---
+<Base title={title} description={description}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <ol class="flex items-center gap-2">
+        <li><a href="/" class="hover:text-amber-600 dark:hover:text-amber-400">Home</a></li>
+        <li>/</li>
+        <li class="text-gray-800 dark:text-gray-200 font-medium">Terms of Use</li>
+      </ol>
+    </nav>
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Terms of Use</h1>
+    <div class="prose prose-gray dark:prose-invert max-w-none">
+      <p><strong>Last updated:</strong> March 20, 2025</p>
+      <h2>Acceptance</h2>
+      <p>By accessing PlainLayoffs ("Site"), you agree to these Terms. If you do not agree, do not use the Site.</p>
+      <h2>Data Accuracy and Disclaimer</h2>
+      <p>PlainLayoffs provides WARN Act data for informational purposes only. We strive for accuracy but make no warranties regarding the completeness, timeliness, or accuracy of any data presented. WARN Act filings are public records; errors in original filings are reflected in our data. Do not make employment or financial decisions based solely on information from this Site.</p>
+      <h2>Not Legal Advice</h2>
+      <p>Nothing on this Site constitutes legal advice. If you believe your employer has violated the WARN Act or any other employment law, consult a licensed employment attorney in your jurisdiction.</p>
+      <h2>Intellectual Property</h2>
+      <p>Underlying government data (WARN Act notices) is in the public domain. Our database structure, presentation, editorial content, and guides are protected by copyright. You may link to our pages freely. You may not scrape, reproduce, or commercially redistribute our database or editorial content without written permission.</p>
+      <h2>Prohibited Uses</h2>
+      <p>You may not: use the Site for unlawful purposes; attempt to gain unauthorized access to our systems; use automated scrapers to harvest data at scale; or use our data to contact, harass, or discriminate against individuals named in WARN notices.</p>
+      <h2>Limitation of Liability</h2>
+      <p>To the fullest extent permitted by law, PlainLayoffs and Kiznis.Studio are not liable for any direct, indirect, incidental, or consequential damages arising from your use of this Site or reliance on its data.</p>
+      <h2>Changes</h2>
+      <p>We may update these Terms at any time. Continued use after changes constitutes acceptance.</p>
+      <h2>Contact</h2>
+      <p>Questions? Use our <a href="/contact">contact page</a>.</p>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,33 @@
+# Content Transformation Configuration
+# How content is processed before publishing
+
+strategy: "passthrough"    # passthrough | summarize | synthesize | analyze
+
+# LLM settings (only used if strategy != passthrough)
+llm:
+  provider: "none"         # none | openrouter | anthropic | openai
+  model: ""                # e.g., "google/gemini-flash-1.5-8b" for free tier
+  api_key_env: ""          # e.g., "OPENROUTER_API_KEY"
+  
+# Transformation prompts (customize per strategy)
+prompts:
+  summarize: |
+    Summarize the following article in 3-5 bullet points, focusing on key facts and takeaways.
+    Keep it concise and informative.
+    
+  synthesize: |
+    You are given multiple articles about the same topic.
+    Create a comprehensive summary that combines insights from all sources.
+    Cite which sources contributed which information.
+    
+  analyze: |
+    Analyze the following article and provide:
+    1. Key facts (what happened)
+    2. Context (why it matters)
+    3. Implications (what could happen next)
+
+# Content rules
+rules:
+  min_length: 100          # Minimum article length (chars)
+  max_length: 5000         # Maximum article length (chars)
+  require_image: false     # Skip articles without images

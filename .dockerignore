@@ -1,0 +1,40 @@
+# Source control & CI
+.git
+.github
+.gitignore
+
+# Dependencies (reinstalled in Docker build)
+node_modules
+
+# Build output (rebuilt in Docker build)
+dist
+
+# Docker/deployment (not needed inside image)
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Dev/local config
+.env*
+.dev.vars
+.wrangler
+wrangler.toml
+
+# Sensitive
+keys
+
+# Data (mounted at runtime via volume)
+data
+*.db
+
+# Documentation
+*.md
+docs
+LICENSE
+
+# Scripts (not needed at runtime)
+scripts
+
+# IDE
+.vscode
+.idea

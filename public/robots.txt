@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://plainlayoffs.com/sitemap-index.xml

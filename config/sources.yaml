@@ -1,0 +1,34 @@
+# Content Sources Configuration
+# Define where content comes from for this portal
+
+# RSS Feeds
+rss:
+  - name: "Source 1"
+    url: "https://example.com/feed.xml"
+    category: "news"
+    enabled: true
+  # - name: "Source 2"
+  #   url: "https://example2.com/rss"
+  #   category: "analysis"
+  #   enabled: true
+
+# API Sources (optional)
+apis: []
+  # - name: "NewsAPI"
+  #   endpoint: "https://newsapi.org/v2/everything"
+  #   params:
+  #     q: "topic"
+  #     language: "en"
+  #   auth_env: "NEWSAPI_KEY"
+
+# Open Data Sources (optional)
+opendata: []
+  # - name: "Government Data"
+  #   url: "https://data.gov/dataset.json"
+  #   format: "json"
+
+# Fetch settings
+fetch:
+  interval: "hourly"       # hourly | daily | manual
+  max_items_per_source: 20
+  dedupe_window_hours: 72

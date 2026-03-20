@@ -1,0 +1,192 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getRawDb as getDb } from '../../lib/db';
+
+export const prerender = false;
+
+const { year } = Astro.params;
+const db = getDb();
+
+const yearNum = parseInt(year || '', 10);
+if (isNaN(yearNum) || yearNum < 2000 || yearNum > 2030) {
+  return Astro.redirect('/404');
+}
+
+const years = db.prepare('SELECT DISTINCT year FROM monthly_stats ORDER BY year DESC').all() as { year: number }[];
+const validYears = years.map(r => r.year);
+if (!validYears.includes(yearNum)) {
+  return Astro.redirect('/404');
+}
+
+const stats = db.prepare(`
+  SELECT SUM(total_workers) as workers, SUM(total_notices) as notices
+  FROM monthly_stats WHERE year = ?
+`).get(yearNum) as { workers: number; notices: number };
+
+const monthStats = db.prepare(`
+  SELECT month, total_workers, total_notices FROM monthly_stats
+  WHERE year = ? ORDER BY month ASC
+`).all(yearNum) as { month: number; total_workers: number; total_notices: number }[];
+
+const topEmployers = db.prepare(`
+  SELECT e.slug, e.name, SUM(n.num_employees) as total_workers, COUNT(n.id) as notice_count
+  FROM notices n JOIN employers e ON n.employer_id = e.id
+  WHERE strftime('%Y', n.effective_date) = ?
+  GROUP BY e.id ORDER BY total_workers DESC LIMIT 20
+`).all(String(yearNum)) as { slug: string; name: string; total_workers: number; notice_count: number }[];
+
+const topIndustries = db.prepare(`
+  SELECT industry_slug, industry_name, SUM(num_employees) as workers, COUNT(id) as notices
+  FROM notices WHERE strftime('%Y', effective_date) = ? AND industry_slug IS NOT NULL
+  GROUP BY industry_slug ORDER BY workers DESC LIMIT 10
+`).all(String(yearNum)) as { industry_slug: string; industry_name: string; workers: number; notices: number }[];
+
+const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const maxWorkers = Math.max(...monthStats.map(m => m.total_workers), 1);
+
+const prevYear = validYears.find(y => y < yearNum);
+const nextYear = validYears.find(y => y > yearNum);
+
+const title = `${yearNum} WARN Act Layoffs — Mass Layoff Data`;
+const description = `${stats?.workers?.toLocaleString() || 0} workers affected across ${stats?.notices?.toLocaleString() || 0} notices in ${yearNum}. Employer breakdown, monthly trends, and industry data.`;
+---
+<Base title={title} description={description}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6" aria-label="Breadcrumb">
+      <ol class="flex items-center gap-2">
+        <li><a href="/" class="hover:text-amber-600 dark:hover:text-amber-400">Home</a></li>
+        <li>/</li>
+        <li class="text-gray-800 dark:text-gray-200 font-medium">{yearNum} Layoffs</li>
+      </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full text-sm font-semibold">{yearNum}</span>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{yearNum} WARN Act Layoffs</h1>
+      </div>
+      <p class="text-gray-600 dark:text-gray-400 text-lg">Mass layoff notices filed in {yearNum} across the United States</p>
+
+      <!-- Year nav -->
+      <div class="flex items-center gap-4 mt-4">
+        {prevYear && <a href={`/year/${prevYear}`} class="text-amber-600 dark:text-amber-400 hover:underline text-sm">← {prevYear}</a>}
+        {nextYear && <a href={`/year/${nextYear}`} class="text-amber-600 dark:text-amber-400 hover:underline text-sm">{nextYear} →</a>}
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
+        <div class="text-3xl font-bold text-amber-600 dark:text-amber-400">{stats?.workers?.toLocaleString() || 0}</div>
+        <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">Workers Affected</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
+        <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats?.notices?.toLocaleString() || 0}</div>
+        <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">Notices Filed</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
+        <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">{topEmployers.length}</div>
+        <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">Employers</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
+        <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">{topIndustries.length}</div>
+        <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">Industries</div>
+      </div>
+    </div>
+
+    <!-- Monthly bar chart -->
+    {monthStats.length > 0 && (
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-10">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-5">Monthly Workers Affected — {yearNum}</h2>
+        <div class="flex items-end gap-1 h-40">
+          {monthStats.map(m => {
+            const heightPct = Math.max(4, Math.round((m.total_workers / maxWorkers) * 100));
+            return (
+              <div class="flex-1 flex flex-col items-center gap-1">
+                <span class="text-xs text-gray-400 dark:text-gray-500">{m.total_workers > 0 ? m.total_workers.toLocaleString() : ''}</span>
+                <div
+                  class="w-full bg-amber-500 dark:bg-amber-600 rounded-t hover:bg-amber-600 dark:hover:bg-amber-500 transition-colors"
+                  style={`height: ${heightPct}%;`}
+                  title={`${monthNames[m.month - 1]}: ${m.total_workers.toLocaleString()} workers`}
+                ></div>
+                <span class="text-xs text-gray-500 dark:text-gray-400">{monthNames[m.month - 1]}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    )}
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <!-- Top Employers -->
+      <div class="lg:col-span-2">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Top Employers by Workers — {yearNum}</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                <th class="px-4 py-3 text-left">#</th>
+                <th class="px-4 py-3 text-left">Company</th>
+                <th class="px-4 py-3 text-right">Workers</th>
+                <th class="px-4 py-3 text-right">Notices</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topEmployers.map((e, i) => (
+                <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                  <td class="px-4 py-3 text-gray-400 dark:text-gray-500">{i + 1}</td>
+                  <td class="px-4 py-3">
+                    <a href={`/employer/${e.slug}`} class="text-amber-600 dark:text-amber-400 hover:underline font-medium">{e.name}</a>
+                  </td>
+                  <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100">{e.total_workers.toLocaleString()}</td>
+                  <td class="px-4 py-3 text-right text-gray-500 dark:text-gray-400">{e.notice_count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Industry breakdown + sidebar -->
+      <div class="space-y-6">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Industries</h2>
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+            {topIndustries.map(ind => (
+              <div class="px-4 py-3 flex justify-between items-center">
+                <a href={`/industry/${ind.industry_slug}`} class="text-amber-600 dark:text-amber-400 hover:underline text-sm font-medium">{ind.industry_name}</a>
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{ind.workers.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Year navigation -->
+        <div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+          <h3 class="font-semibold text-amber-800 dark:text-amber-200 mb-3 text-sm">Browse by Year</h3>
+          <div class="flex flex-wrap gap-2">
+            {validYears.map(y => (
+              <a
+                href={`/year/${y}`}
+                class={`px-3 py-1 rounded text-sm font-medium ${y === yearNum ? 'bg-amber-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/30 border border-gray-200 dark:border-gray-600'}`}
+              >{y}</a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": `${yearNum} WARN Act Layoff Notices`,
+    "description": description,
+    "url": `https://plainlayoffs.com/year/${yearNum}`,
+    "temporalCoverage": `${yearNum}`,
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "creator": { "@type": "Organization", "name": "PlainLayoffs" }
+  })} />
+</Base>

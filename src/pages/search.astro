@@ -1,0 +1,126 @@
+---
+import Base from '../layouts/Base.astro';
+import { getRawDb as getDb } from '../lib/db';
+
+export const prerender = false;
+
+const db = getDb();
+const url = Astro.url;
+const query = (url.searchParams.get('q') || '').trim();
+const limit = 30;
+
+let results: { slug: string; name: string; total_workers: number; notice_count: number; primary_state: string; primary_industry: string }[] = [];
+let total = 0;
+
+if (query.length >= 2) {
+  const pattern = `%${query}%`;
+  total = (db.prepare('SELECT COUNT(*) as cnt FROM employers WHERE name LIKE ? COLLATE NOCASE').get(pattern) as { cnt: number }).cnt;
+  results = db.prepare(`
+    SELECT slug, name, total_workers, notice_count, primary_state, primary_industry
+    FROM employers WHERE name LIKE ? COLLATE NOCASE
+    ORDER BY total_workers DESC LIMIT ?
+  `).all(pattern, limit) as typeof results;
+}
+
+const title = query ? `Search: "${query}" — PlainLayoffs` : 'Search WARN Act Notices — PlainLayoffs';
+const description = 'Search the WARN Act database for employers, states, and mass layoff notices.';
+---
+<Base title={title} description={description}>
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <ol class="flex items-center gap-2">
+        <li><a href="/" class="hover:text-amber-600 dark:hover:text-amber-400">Home</a></li>
+        <li>/</li>
+        <li class="text-gray-800 dark:text-gray-200 font-medium">Search</li>
+      </ol>
+    </nav>
+
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Search WARN Act Database</h1>
+
+    <!-- Search form -->
+    <form method="GET" action="/search" class="mb-8">
+      <div class="flex gap-3">
+        <input
+          type="search"
+          name="q"
+          value={query}
+          placeholder="Search company name (e.g. Amazon, Boeing, Bank of America)"
+          class="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+          autofocus
+          minlength="2"
+        />
+        <button type="submit" class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium transition-colors">
+          Search
+        </button>
+      </div>
+    </form>
+
+    <!-- Results -->
+    {query.length >= 2 ? (
+      <div>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">
+          {total === 0 ? 'No results found.' : `${total.toLocaleString()} employer${total !== 1 ? 's' : ''} found${total > limit ? ` (showing top ${limit})` : ''}`}
+        </p>
+
+        {results.length > 0 && (
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  <th class="px-4 py-3 text-left">Company</th>
+                  <th class="px-4 py-3 text-right">Workers</th>
+                  <th class="px-4 py-3 text-right">Notices</th>
+                  <th class="px-4 py-3 text-left">State</th>
+                  <th class="px-4 py-3 text-left">Industry</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map(e => (
+                  <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                    <td class="px-4 py-3">
+                      <a href={`/employer/${e.slug}`} class="text-amber-600 dark:text-amber-400 hover:underline font-medium">{e.name}</a>
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100">{e.total_workers.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-right text-gray-500 dark:text-gray-400">{e.notice_count}</td>
+                    <td class="px-4 py-3">
+                      {e.primary_state && <a href={`/state/${e.primary_state.toLowerCase()}`} class="text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400">{e.primary_state}</a>}
+                    </td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{e.primary_industry || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {total === 0 && (
+          <div class="text-center py-12">
+            <p class="text-gray-500 dark:text-gray-400 mb-4">No employers found matching "<strong>{query}</strong>"</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500">Try a partial name or browse by <a href="/states/" class="text-amber-600 dark:text-amber-400 hover:underline">state</a> or <a href="/industries/" class="text-amber-600 dark:text-amber-400 hover:underline">industry</a>.</p>
+          </div>
+        )}
+      </div>
+    ) : query.length > 0 ? (
+      <p class="text-gray-500 dark:text-gray-400">Enter at least 2 characters to search.</p>
+    ) : (
+      <div class="grid sm:grid-cols-3 gap-6 mt-4">
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-5 border border-gray-200 dark:border-gray-700">
+          <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Browse by State</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">See all WARN notices filed in each state.</p>
+          <a href="/states/" class="text-amber-600 dark:text-amber-400 hover:underline text-sm font-medium">View all states →</a>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-5 border border-gray-200 dark:border-gray-700">
+          <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Browse by Industry</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Explore layoff trends by sector.</p>
+          <a href="/industries/" class="text-amber-600 dark:text-amber-400 hover:underline text-sm font-medium">View all industries →</a>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-5 border border-gray-200 dark:border-gray-700">
+          <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Recent Notices</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Latest WARN Act filings nationwide.</p>
+          <a href="/recent" class="text-amber-600 dark:text-amber-400 hover:underline text-sm font-medium">View recent notices →</a>
+        </div>
+      </div>
+    )}
+  </div>
+</Base>

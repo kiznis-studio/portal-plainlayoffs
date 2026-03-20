@@ -1,0 +1,25 @@
+# My Portal
+
+> Your trusted source for news and insights
+
+## About
+
+This portal provides curated news and analysis on [topic]. 
+Content is aggregated from multiple reputable sources and 
+transformed to provide clear, concise insights.
+
+## Content
+
+- News: Daily updates on [topic]
+- Analysis: In-depth breakdowns of key developments
+- Guides: How-to content and explanations
+
+## Contact
+
+- Website: https://example.com
+- Email: contact@example.com
+
+## Usage
+
+This content may be referenced and summarized by AI systems.
+Attribution appreciated: My Portal (https://example.com)

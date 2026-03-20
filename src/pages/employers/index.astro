@@ -1,0 +1,73 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getAllEmployers } from '../../lib/db';
+
+const sort = (Astro.url.searchParams.get('sort') as 'workers'|'notices'|'name') || 'workers';
+const employers = await getAllEmployers(sort, 200);
+
+function formatWorkers(n: number) {
+  if (n >= 1000) return `${(n/1000).toFixed(0)}K`;
+  return n.toLocaleString();
+}
+---
+
+<Base title="Top Employers by Layoffs — PlainLayoffs"
+  description="Browse employers with WARN Act layoff notices. Sorted by workers affected, notice count, or company name."
+  breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Employers' }]}>
+  
+  <div class="container py-8">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-3xl font-bold">Employers</h1>
+        <p class="text-[var(--color-muted)] mt-1">{employers.length} employers with WARN Act notices</p>
+      </div>
+      <div class="flex gap-2 text-sm">
+        <a href="/employers/?sort=workers" class={`px-3 py-1.5 rounded-lg border transition-colors ${sort === 'workers' ? 'bg-amber-600 text-white border-amber-600' : 'border-[var(--color-border)] text-[var(--color-muted)] hover:border-amber-400'}`}>By Workers</a>
+        <a href="/employers/?sort=notices" class={`px-3 py-1.5 rounded-lg border transition-colors ${sort === 'notices' ? 'bg-amber-600 text-white border-amber-600' : 'border-[var(--color-border)] text-[var(--color-muted)] hover:border-amber-400'}`}>By Notices</a>
+        <a href="/employers/?sort=name" class={`px-3 py-1.5 rounded-lg border transition-colors ${sort === 'name' ? 'bg-amber-600 text-white border-amber-600' : 'border-[var(--color-border)] text-[var(--color-muted)] hover:border-amber-400'}`}>A to Z</a>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="border-b border-[var(--color-border)]">
+          <tr class="text-left">
+            <th class="pb-3 pr-4 text-[var(--color-muted)] font-medium w-8">#</th>
+            <th class="pb-3 pr-4 text-[var(--color-muted)] font-medium">Company</th>
+            <th class="pb-3 pr-4 text-[var(--color-muted)] font-medium text-right">Workers</th>
+            <th class="pb-3 pr-4 text-[var(--color-muted)] font-medium text-right">Notices</th>
+            <th class="pb-3 pr-4 text-[var(--color-muted)] font-medium hidden md:table-cell">State</th>
+            <th class="pb-3 text-[var(--color-muted)] font-medium hidden lg:table-cell">Industry</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--color-border)]">
+          {employers.map((emp, i) => (
+            <tr class="hover:bg-[var(--color-card)] transition-colors">
+              <td class="py-3 pr-4 text-[var(--color-muted)]">{i + 1}</td>
+              <td class="py-3 pr-4">
+                <a href={`/employer/${emp.slug}`} class="font-medium text-[var(--color-foreground)] hover:text-amber-600 dark:hover:text-amber-400">
+                  {emp.name}
+                </a>
+              </td>
+              <td class="py-3 pr-4 text-right font-semibold text-amber-600 dark:text-amber-400">{formatWorkers(emp.total_workers)}</td>
+              <td class="py-3 pr-4 text-right">{emp.total_notices}</td>
+              <td class="py-3 pr-4 hidden md:table-cell text-[var(--color-muted)]">
+                {emp.primary_state && <a href={`/state/${emp.primary_state}`} class="hover:text-amber-600 dark:hover:text-amber-400">{emp.primary_state}</a>}
+              </td>
+              <td class="py-3 hidden lg:table-cell text-[var(--color-muted)] max-w-[150px]">{emp.primary_industry || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "WARN Act Employer Layoff Database",
+    "description": "Employers with mass layoff notices filed under the WARN Act",
+    "url": "https://plainlayoffs.com/employers/",
+    "creator": { "@type": "Organization", "name": "PlainLayoffs" }
+  })} />
+</Base>

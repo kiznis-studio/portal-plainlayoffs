@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getIndustries } from '../../lib/db';
+const industries = await getIndustries();
+---
+<Base title="Layoffs by Industry — PlainLayoffs"
+  description="Mass layoff data by industry sector. See which industries have the most WARN Act notices and workers affected."
+  breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Industries' }]}>
+  <div class="container py-8">
+    <h1 class="text-3xl font-bold mb-2">Layoffs by Industry</h1>
+    <p class="text-[var(--color-muted)] mb-8">WARN Act notices grouped by industry sector</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {industries.map(ind => (
+        <a href={`/industry/${ind.slug}`} class="p-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] hover:border-amber-400 transition-colors group">
+          <h2 class="font-semibold text-[var(--color-foreground)] group-hover:text-amber-600 dark:group-hover:text-amber-400">{ind.name}</h2>
+          <div class="flex items-center gap-4 mt-2">
+            <div><p class="text-xl font-bold text-amber-600 dark:text-amber-400">{ind.total_workers >= 1000 ? `${(ind.total_workers/1000).toFixed(0)}K` : ind.total_workers.toLocaleString()}</p><p class="text-xs text-[var(--color-muted)]">workers</p></div>
+            <div><p class="text-xl font-bold">{ind.total_notices}</p><p class="text-xs text-[var(--color-muted)]">notices</p></div>
+          </div>
+          {ind.naics && <p class="text-xs text-[var(--color-muted)] mt-2">NAICS {ind.naics}</p>}
+        </a>
+      ))}
+    </div>
+  </div>
+</Base>

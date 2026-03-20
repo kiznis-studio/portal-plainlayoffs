@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+export const prerender = true;
+const title = 'Privacy Policy — PlainLayoffs';
+const description = 'PlainLayoffs privacy policy — how we collect, use, and protect your information.';
+---
+<Base title={title} description={description}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <ol class="flex items-center gap-2">
+        <li><a href="/" class="hover:text-amber-600 dark:hover:text-amber-400">Home</a></li>
+        <li>/</li>
+        <li class="text-gray-800 dark:text-gray-200 font-medium">Privacy Policy</li>
+      </ol>
+    </nav>
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Privacy Policy</h1>
+    <div class="prose prose-gray dark:prose-invert max-w-none">
+      <p><strong>Last updated:</strong> March 20, 2025</p>
+      <h2>Information We Collect</h2>
+      <p>PlainLayoffs collects minimal user data. When you visit our site, we collect standard server logs (IP address, browser type, pages visited, referrer) for security and analytics purposes. We do not collect personal information unless you voluntarily provide it through our contact form.</p>
+      <h2>Analytics</h2>
+      <p>We use Google Analytics and privacy-respecting analytics tools to understand how visitors use our site. Analytics data is aggregated and anonymized. We use Google Consent Mode v2 — analytics and advertising cookies are not set until consent is granted.</p>
+      <h2>Advertising</h2>
+      <p>We participate in the Google AdSense program. Google may use cookies to serve ads based on your browsing history. You can opt out at <a href="https://adssettings.google.com" rel="noopener noreferrer" target="_blank">adssettings.google.com</a>. We do not sell your data to advertisers directly.</p>
+      <h2>Cookies</h2>
+      <p>We use cookies for: site preferences (dark mode), analytics (Google Analytics), and advertising (Google AdSense). Functional cookies (preferences) are set without consent. Analytics and advertising cookies require your consent under applicable law.</p>
+      <h2>Data Sharing</h2>
+      <p>We do not sell personal data. We share data only with service providers necessary to operate the site (hosting, analytics, advertising) and only to the extent necessary for those services.</p>
+      <h2>Your Rights</h2>
+      <p>If you are in the EU/EEA/UK or California, you have rights to access, correct, delete, and restrict processing of your personal data. Contact us via the <a href="/contact">contact page</a> to exercise these rights.</p>
+      <h2>Contact</h2>
+      <p>Questions about this policy? Use our <a href="/contact">contact page</a>.</p>
+    </div>
+  </div>
+</Base>

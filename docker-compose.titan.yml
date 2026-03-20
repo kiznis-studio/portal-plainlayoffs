@@ -1,0 +1,18 @@
+services:
+  portal-plainlayoffs:
+    image: ghcr.io/kiznis-studio/portal-plainlayoffs:latest
+    container_name: portal-plainlayoffs
+    restart: unless-stopped
+    mem_limit: 256m
+    environment:
+      - HOST=0.0.0.0
+      - PORT=4321
+      - NODE_ENV=production
+    volumes:
+      - /opt/portals/data/sqlite/plainlayoffs.db:/data/portal.db:ro
+    networks:
+      - portals-net
+
+networks:
+  portals-net:
+    external: true

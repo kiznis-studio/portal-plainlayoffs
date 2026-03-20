@@ -1,0 +1,33 @@
+# Monetization Configuration
+
+# Ad provider
+provider: "none"           # none | adsense | custom
+
+# Google AdSense (when enabled)
+adsense:
+  publisher_id: ""         # ca-pub-xxxxxxxxxxxxxxxx
+  
+# Ad placements
+placements:
+  header:
+    enabled: false
+    type: "display"        # display | native
+    slot: ""
+  in_article:
+    enabled: false
+    type: "native"
+    slot: ""
+    after_paragraph: 2     # Show after Nth paragraph
+  sidebar:
+    enabled: false
+    type: "display"
+    slot: ""
+  footer:
+    enabled: false
+    type: "display"
+    slot: ""
+
+# Affiliate links (optional)
+affiliates: []
+  # - name: "Amazon"
+  #   tag: "mytag-20"

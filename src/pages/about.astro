@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+
+export const prerender = true;
+const title = 'About PlainLayoffs — WARN Act Mass Layoff Intelligence';
+const description = 'PlainLayoffs is a free public resource for tracking mass layoff notices filed under the federal WARN Act. Learn about our data sources, methodology, and mission.';
+---
+<Base title={title} description={description}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <ol class="flex items-center gap-2">
+        <li><a href="/" class="hover:text-amber-600 dark:hover:text-amber-400">Home</a></li>
+        <li>/</li>
+        <li class="text-gray-800 dark:text-gray-200 font-medium">About</li>
+      </ol>
+    </nav>
+
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">About PlainLayoffs</h1>
+
+    <div class="prose prose-gray dark:prose-invert prose-a:text-amber-600 dark:prose-a:text-amber-400 max-w-none">
+      <h2>What Is PlainLayoffs?</h2>
+      <p>PlainLayoffs is a free public database of mass layoff notices filed under the federal Worker Adjustment and Retraining Notification (WARN) Act. Our mission is to make WARN Act data accessible, searchable, and useful for workers, researchers, journalists, and policymakers.</p>
+
+      <h2>Data Sources</h2>
+      <p>Our database is built from publicly available WARN Act filings submitted by employers to state workforce agencies. California WARN Act data is sourced directly from the California Employment Development Department (EDD), which publishes reports under California's own WARN law. We supplement state data with documented major employer layoff events from public company filings, news sources, and official announcements.</p>
+
+      <p>All data is obtained from public government sources and publicly available records. We do not use data that is not publicly available, and we do not sell, redistribute, or commercially license the raw data.</p>
+
+      <h2>Data Methodology</h2>
+      <p>Raw WARN Act notices contain varying levels of detail depending on the state. We standardize company names, normalize geographic data to state codes, and map industry descriptions to NAICS-based categories. Company names are normalized to remove common legal suffixes (Inc., LLC, Corp., etc.) and facility codes to improve grouping of notices from the same employer.</p>
+
+      <p>Where notices specify "layoff" vs. "closure," we preserve that distinction. Notices without this information are classified as "layoff" by default. Worker counts are taken directly from the filed notices; we do not estimate or adjust reported figures.</p>
+
+      <h2>Limitations</h2>
+      <p>WARN Act coverage has inherent limitations. Employers with fewer than 100 employees are not required to file. Some employers required to file do not do so (enforcement is through private litigation). State reporting systems vary in timeliness and completeness. Our database reflects publicly available filings and may not include all notices filed in all states. Users should treat our data as indicative rather than exhaustive.</p>
+
+      <h2>About Kiznis.Studio</h2>
+      <p>PlainLayoffs is built and maintained by <a href="https://kiznis.studio" rel="noopener noreferrer">Kiznis.Studio</a>, a portfolio of data intelligence portals that make government and public datasets accessible and useful. Other portals in our network include <a href="https://wagedex.com">WageDex</a> (salary data), <a href="https://plainworkforce.com">PlainWorkforce</a> (AI job displacement), <a href="https://plainsafetyscore.com">PlainSafetyScore</a> (employer safety), and <a href="https://plainlabor.com">PlainLabor</a> (labor market trends).</p>
+
+      <h2>Contact</h2>
+      <p>For data corrections, press inquiries, or general feedback, use our <a href="/contact">contact page</a>.</p>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,25 @@
+# Portal Site Configuration
+# Edit this file to customize your portal
+
+name: "My Portal"
+tagline: "Your go-to source for [topic] news and insights"
+description: "A comprehensive resource for [topic] news, analysis, and insights updated daily."
+url: "https://example.com"
+language: "en"
+author: "Portal Team"
+
+# Theme customization
+theme:
+  accent: "#3b82f6"        # Primary color (Tailwind blue-500)
+  font: "system"           # system | inter | jakarta
+  style: "minimal"         # minimal | magazine | blog
+  dark_mode: true          # Enable dark mode toggle
+
+# Social links (optional)
+social:
+  twitter: ""
+  github: ""
+
+# Contact
+contact:
+  email: "contact@example.com"

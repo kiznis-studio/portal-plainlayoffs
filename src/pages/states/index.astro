@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getStates } from '../../lib/db';
+
+const states = await getStates();
+const sortedByWorkers = [...states].sort((a, b) => b.total_workers - a.total_workers);
+---
+
+<Base title="WARN Act Data by State — PlainLayoffs"
+  description="Browse mass layoff WARN Act notices by state. All 50 states plus Washington D.C. covered."
+  breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'States' }]}>
+  
+  <div class="container py-8">
+    <h1 class="text-3xl font-bold mb-2">Browse by State</h1>
+    <p class="text-[var(--color-muted)] mb-8">WARN Act notices and worker impact by state</p>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {sortedByWorkers.map(state => (
+        <a href={`/state/${state.code}`}
+          class="flex items-center justify-between p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] hover:border-amber-400 transition-colors group">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg text-[var(--color-foreground)] group-hover:text-amber-600 dark:group-hover:text-amber-400">{state.code}</span>
+              <span class="text-sm text-[var(--color-muted)]">{state.name}</span>
+            </div>
+            {state.total_notices > 0 && (
+              <p class="text-xs text-[var(--color-muted)] mt-0.5">{state.total_notices} notice{state.total_notices !== 1 ? 's' : ''} · WARN threshold: {state.warn_threshold}+</p>
+            )}
+          </div>
+          {state.total_workers > 0 && (
+            <span class="text-sm font-semibold text-amber-600 dark:text-amber-400">
+              {state.total_workers >= 1000 ? `${(state.total_workers/1000).toFixed(0)}K` : state.total_workers.toLocaleString()}
+            </span>
+          )}
+        </a>
+      ))}
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,313 @@
+---
+import Base from '../layouts/Base.astro';
+import { getHeroStats, getRecentNotices, getTopEmployers, getMonthlyStats, getStates, getIndustries } from '../lib/db';
+
+const stats = await getHeroStats();
+const recentNotices = await getRecentNotices(15);
+const topEmployers = await getTopEmployers(10);
+const monthlyStats = await getMonthlyStats();
+const states = await getStates();
+const industries = await getIndustries();
+
+const siteName = 'PlainLayoffs';
+const siteDesc = 'Track mass layoffs and WARN Act filings across the United States. Search employer layoff history, state trends, and worker impact data from public WARN Act notices.';
+
+// Chart data: last 24 months sorted ascending
+const chartData = [...monthlyStats].sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month).slice(-24);
+const maxWorkers = Math.max(...chartData.map(m => m.total_workers), 1);
+
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function formatWorkers(n: number) {
+  if (n >= 1000000) return `${(n/1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n/1000).toFixed(0)}K`;
+  return n.toLocaleString();
+}
+
+function formatDate(d: string | null) {
+  if (!d) return '';
+  return new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+---
+
+<Base title={siteName} description={siteDesc}
+  breadcrumbs={[{ name: 'Home', href: '/' }]}>
+  
+  <!-- Hero -->
+  <section class="py-12 md:py-20 bg-gradient-to-b from-amber-50/50 to-transparent dark:from-amber-900/10">
+    <div class="container">
+      <div class="max-w-4xl">
+        <div class="inline-flex items-center gap-2 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-3 py-1 rounded-full mb-6">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+          WARN Act Transparency Database
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-[var(--color-foreground)]">
+          Mass Layoff Intelligence
+        </h1>
+        <p class="text-xl text-[var(--color-muted)] max-w-2xl">
+          Track employer WARN Act filings across all 50 states. Search by company, state, or industry to understand layoff patterns and worker impact.
+        </p>
+        
+        <!-- Stats bar -->
+        <div class="flex flex-wrap gap-6 mt-8">
+          {stats && (
+            <>
+              <div>
+                <p class="text-3xl font-bold text-amber-600 dark:text-amber-400">{formatWorkers(stats.total_workers)}</p>
+                <p class="text-sm text-[var(--color-muted)]">Workers Affected</p>
+              </div>
+              <div class="border-l border-[var(--color-border)] pl-6">
+                <p class="text-3xl font-bold text-[var(--color-foreground)]">{stats.total_notices.toLocaleString()}</p>
+                <p class="text-sm text-[var(--color-muted)]">WARN Notices</p>
+              </div>
+              <div class="border-l border-[var(--color-border)] pl-6">
+                <p class="text-3xl font-bold text-[var(--color-foreground)]">{stats.total_employers.toLocaleString()}</p>
+                <p class="text-sm text-[var(--color-muted)]">Employers Tracked</p>
+              </div>
+              <div class="border-l border-[var(--color-border)] pl-6">
+                <p class="text-3xl font-bold text-[var(--color-foreground)]">51</p>
+                <p class="text-sm text-[var(--color-muted)]">States Covered</p>
+              </div>
+            </>
+          )}
+        </div>
+
+        <!-- Search bar -->
+        <form action="/search" method="GET" class="mt-8 flex gap-3 max-w-lg">
+          <div class="relative flex-1">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text" name="q" placeholder="Search employers (Amazon, Boeing, Meta…)" class="w-full pl-10 pr-4 py-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+          </div>
+          <button type="submit" class="px-5 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors">
+            Search
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Monthly trend chart (SVG bar chart) -->
+  {chartData.length > 0 && (
+    <section class="py-8 border-b border-[var(--color-border)]">
+      <div class="container">
+        <h2 class="text-xl font-bold mb-6">Workers Affected by Month</h2>
+        <div class="overflow-x-auto">
+          <div class="min-w-[600px]">
+            <svg width="100%" viewBox={`0 0 ${chartData.length * 28 + 40} 140`} class="w-full">
+              {chartData.map((m, i) => {
+                const barH = Math.round((m.total_workers / maxWorkers) * 100);
+                const x = i * 28 + 20;
+                const y = 110 - barH;
+                const isHighlight = m.total_workers === Math.max(...chartData.map(d => d.total_workers));
+                return (
+                  <>
+                    <rect x={x} y={y} width="22" height={barH} rx="2"
+                      class={isHighlight ? 'fill-amber-500 dark:fill-amber-400' : 'fill-amber-200 dark:fill-amber-800 hover:fill-amber-400 dark:hover:fill-amber-500'}
+                      title={`${MONTH_NAMES[m.month-1]} ${m.year}: ${m.total_workers.toLocaleString()} workers`} />
+                    {i % 4 === 0 && (
+                      <text x={x + 11} y={128} text-anchor="middle" class="fill-gray-400 dark:fill-gray-600" font-size="8">
+                        {MONTH_NAMES[m.month-1]}
+                      </text>
+                    )}
+                    {i % 4 === 0 && (
+                      <text x={x + 11} y={137} text-anchor="middle" class="fill-gray-400 dark:fill-gray-600" font-size="7">
+                        {m.year}
+                      </text>
+                    )}
+                  </>
+                );
+              })}
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <div class="container py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Recent notices -->
+      <div class="lg:col-span-2">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-xl font-bold">Recent WARN Notices</h2>
+          <a href="/recent" class="text-sm text-amber-600 dark:text-amber-400 hover:underline">View all →</a>
+        </div>
+        <div class="space-y-3">
+          {recentNotices.map(notice => (
+            <div class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] hover:border-amber-300 dark:hover:border-amber-700 transition-colors">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    {notice.employer_slug ? (
+                      <a href={`/employer/${notice.employer_slug}`} class="font-medium text-[var(--color-foreground)] hover:text-amber-600 dark:hover:text-amber-400 truncate">
+                        {notice.employer_name || 'Unknown Employer'}
+                      </a>
+                    ) : (
+                      <span class="font-medium text-[var(--color-foreground)] truncate">{notice.employer_name || 'Unknown Employer'}</span>
+                    )}
+                    <span class={`text-xs px-2 py-0.5 rounded-full ${notice.type === 'closure' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>
+                      {notice.type === 'closure' ? 'Closure' : 'Layoff'}
+                    </span>
+                  </div>
+                  <p class="text-sm text-[var(--color-muted)] mt-0.5">
+                    {notice.city && `${notice.city}, `}{notice.state}
+                    {notice.industry && ` · ${notice.industry}`}
+                  </p>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="font-semibold text-amber-600 dark:text-amber-400">{notice.workers_affected.toLocaleString()}</p>
+                  <p class="text-xs text-[var(--color-muted)]">workers</p>
+                  <p class="text-xs text-[var(--color-muted)] mt-1">{formatDate(notice.notice_date)}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <!-- Top employers -->
+        <div class="p-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">Top Employers by Impact</h3>
+            <a href="/rankings" class="text-xs text-amber-600 dark:text-amber-400 hover:underline">All →</a>
+          </div>
+          <div class="space-y-2">
+            {topEmployers.map((emp, i) => (
+              <a href={`/employer/${emp.slug}`} class="flex items-center gap-3 py-1.5 hover:bg-[var(--color-background)] rounded px-2 -mx-2 transition-colors group">
+                <span class="text-xs text-[var(--color-muted)] w-4 shrink-0">{i + 1}</span>
+                <span class="flex-1 text-sm text-[var(--color-foreground)] group-hover:text-amber-600 dark:group-hover:text-amber-400 truncate">{emp.name}</span>
+                <span class="text-xs font-medium text-amber-600 dark:text-amber-400 shrink-0">{formatWorkers(emp.total_workers)}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <!-- Browse by industry -->
+        <div class="p-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+          <h3 class="font-semibold mb-4">Browse by Industry</h3>
+          <div class="space-y-2">
+            {industries.slice(0, 8).map(ind => (
+              <a href={`/industry/${ind.slug}`} class="flex items-center justify-between py-1 hover:text-amber-600 dark:hover:text-amber-400 transition-colors group">
+                <span class="text-sm text-[var(--color-foreground)] group-hover:text-amber-600 dark:group-hover:text-amber-400">{ind.name}</span>
+                <span class="text-xs text-[var(--color-muted)]">{formatWorkers(ind.total_workers)}</span>
+              </a>
+            ))}
+          </div>
+          <a href="/industries/" class="text-xs text-amber-600 dark:text-amber-400 hover:underline mt-3 block">View all industries →</a>
+        </div>
+
+        <!-- Quick links to cross-portal -->
+        <div class="p-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+          <h3 class="font-semibold mb-3">Related Resources</h3>
+          <ul class="space-y-2">
+            <li><a href="https://wagedex.com" target="_blank" rel="noopener" class="text-sm text-[var(--color-muted)] hover:text-[var(--color-foreground)] transition-colors">→ WageDex: Salary data by occupation</a></li>
+            <li><a href="https://plainworkforce.com" target="_blank" rel="noopener" class="text-sm text-[var(--color-muted)] hover:text-[var(--color-foreground)] transition-colors">→ PlainWorkforce: AI job displacement risk</a></li>
+            <li><a href="https://plainsafetyscore.com" target="_blank" rel="noopener" class="text-sm text-[var(--color-muted)] hover:text-[var(--color-foreground)] transition-colors">→ PlainSafetyScore: Employer safety grades</a></li>
+            <li><a href="https://plainlabor.com" target="_blank" rel="noopener" class="text-sm text-[var(--color-muted)] hover:text-[var(--color-foreground)] transition-colors">→ PlainLabor: Job market conditions by state</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- States quick nav -->
+  <section class="py-10 border-t border-[var(--color-border)] bg-[var(--color-card)]">
+    <div class="container">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-xl font-bold">Browse by State</h2>
+        <a href="/states/" class="text-sm text-amber-600 dark:text-amber-400 hover:underline">All states →</a>
+      </div>
+      <div class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-2">
+        {states.map(st => (
+          <a href={`/state/${st.code}`}
+            class="flex flex-col items-center p-2 rounded-lg border border-[var(--color-border)] hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-colors text-center">
+            <span class="font-bold text-sm text-[var(--color-foreground)]">{st.code}</span>
+            <span class="text-xs text-[var(--color-muted)] mt-0.5">{st.total_notices > 0 ? `${st.total_notices}` : '—'}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="container py-10">
+    <div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white">Frequently Asked Questions</h2>
+      <div class="mt-4 divide-y divide-gray-100 dark:divide-gray-800">
+        <details class="group py-4" open>
+          <summary class="flex cursor-pointer items-center justify-between font-medium text-gray-900 dark:text-gray-100 [&::-webkit-details-marker]:hidden list-none">
+            What is the WARN Act?
+            <svg class="h-5 w-5 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">The Worker Adjustment and Retraining Notification (WARN) Act requires employers with 100+ employees to provide 60 days advance notice before plant closings or mass layoffs affecting 50+ workers. Many states have their own "mini-WARN" laws with lower thresholds.</p>
+        </details>
+        <details class="group py-4">
+          <summary class="flex cursor-pointer items-center justify-between font-medium text-gray-900 dark:text-gray-100 [&::-webkit-details-marker]:hidden list-none">
+            Where does this data come from?
+            <svg class="h-5 w-5 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">PlainLayoffs aggregates data from state WARN Act reporting systems (including CA EDD), publicly documented WARN filings, and DOL reporting. All data represents official employer notifications to government agencies.</p>
+        </details>
+        <details class="group py-4">
+          <summary class="flex cursor-pointer items-center justify-between font-medium text-gray-900 dark:text-gray-100 [&::-webkit-details-marker]:hidden list-none">
+            How do I find my employer's layoff history?
+            <svg class="h-5 w-5 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Use the search bar above or browse employers directly. Each employer page shows their complete WARN notice history, total workers affected, and geographic footprint of layoffs.</p>
+        </details>
+        <details class="group py-4">
+          <summary class="flex cursor-pointer items-center justify-between font-medium text-gray-900 dark:text-gray-100 [&::-webkit-details-marker]:hidden list-none">
+            Are all states covered?
+            <svg class="h-5 w-5 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">All 50 states plus Washington D.C. are represented. Coverage depth varies — California has the most comprehensive data from the CA EDD. Other states include major documented layoff events.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Schema markup -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "PlainLayoffs",
+        "url": "https://plainlayoffs.com",
+        "description": siteDesc
+      },
+      {
+        "@type": "WebSite",
+        "name": "PlainLayoffs",
+        "url": "https://plainlayoffs.com",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://plainlayoffs.com/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "Dataset",
+        "name": "WARN Act Layoff Notices Database",
+        "description": "Comprehensive database of US WARN Act layoff notices from state labor departments",
+        "url": "https://plainlayoffs.com",
+        "creator": { "@type": "Organization", "name": "PlainLayoffs" },
+        "license": "https://creativecommons.org/licenses/by/4.0/"
+      }
+    ]
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "What is the WARN Act?", "acceptedAnswer": { "@type": "Answer", "text": "The Worker Adjustment and Retraining Notification (WARN) Act requires employers with 100+ employees to provide 60 days advance notice before plant closings or mass layoffs affecting 50+ workers." } },
+      { "@type": "Question", "name": "Where does this data come from?", "acceptedAnswer": { "@type": "Answer", "text": "PlainLayoffs aggregates data from state WARN Act reporting systems including CA EDD, publicly documented WARN filings, and DOL reporting." } },
+      { "@type": "Question", "name": "Are all states covered?", "acceptedAnswer": { "@type": "Answer", "text": "All 50 states plus Washington D.C. are represented in our database." } }
+    ]
+  })} />
+</Base>

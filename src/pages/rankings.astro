@@ -1,0 +1,203 @@
+---
+import Base from '../layouts/Base.astro';
+import { getRawDb as getDb } from '../lib/db';
+
+export const prerender = false;
+
+const db = getDb();
+
+const byWorkers = db.prepare(`
+  SELECT slug, name, total_workers, notice_count, primary_state, primary_industry
+  FROM employers ORDER BY total_workers DESC LIMIT 25
+`).all() as { slug: string; name: string; total_workers: number; notice_count: number; primary_state: string; primary_industry: string }[];
+
+const byNotices = db.prepare(`
+  SELECT slug, name, total_workers, notice_count, primary_state, primary_industry
+  FROM employers ORDER BY notice_count DESC LIMIT 25
+`).all() as { slug: string; name: string; total_workers: number; notice_count: number; primary_state: string; primary_industry: string }[];
+
+const byState = db.prepare(`
+  SELECT s.code, s.name, s.total_workers, s.total_notices
+  FROM states s ORDER BY s.total_workers DESC LIMIT 25
+`).all() as { code: string; name: string; total_workers: number; total_notices: number }[];
+
+const byIndustry = db.prepare(`
+  SELECT slug, name, total_workers, total_notices
+  FROM industries ORDER BY total_workers DESC LIMIT 15
+`).all() as { slug: string; name: string; total_workers: number; total_notices: number }[];
+
+const title = 'WARN Act Rankings — Top Employers, States & Industries';
+const description = 'Rankings of employers, states, and industries by mass layoff activity. See which companies have filed the most WARN Act notices and affected the most workers.';
+---
+<Base title={title} description={description}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <ol class="flex items-center gap-2">
+        <li><a href="/" class="hover:text-amber-600 dark:hover:text-amber-400">Home</a></li>
+        <li>/</li>
+        <li class="text-gray-800 dark:text-gray-200 font-medium">Rankings</li>
+      </ol>
+    </nav>
+
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">WARN Act Rankings</h1>
+    <p class="text-gray-600 dark:text-gray-400 mb-10">Top employers, states, and industries by layoff activity</p>
+
+    <!-- Tab navigation -->
+    <div class="flex gap-2 mb-8 border-b border-gray-200 dark:border-gray-700" id="tab-nav">
+      <button onclick="showTab('workers')" id="tab-workers" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-amber-600 text-amber-700 dark:text-amber-400 -mb-px">By Workers</button>
+      <button onclick="showTab('notices')" id="tab-notices" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 -mb-px">By Notices</button>
+      <button onclick="showTab('states')" id="tab-states" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 -mb-px">By State</button>
+      <button onclick="showTab('industries')" id="tab-industries" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 -mb-px">By Industry</button>
+    </div>
+
+    <!-- Top 25 by Workers -->
+    <div id="panel-workers">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Top 25 Employers by Workers Affected</h2>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              <th class="px-4 py-3 text-left">Rank</th>
+              <th class="px-4 py-3 text-left">Company</th>
+              <th class="px-4 py-3 text-right">Total Workers</th>
+              <th class="px-4 py-3 text-right">Notices</th>
+              <th class="px-4 py-3 text-left">State</th>
+            </tr>
+          </thead>
+          <tbody>
+            {byWorkers.map((e, i) => (
+              <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <td class="px-4 py-3">
+                  <span class={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${i < 3 ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>{i + 1}</span>
+                </td>
+                <td class="px-4 py-3">
+                  <a href={`/employer/${e.slug}`} class="text-amber-600 dark:text-amber-400 hover:underline font-medium">{e.name}</a>
+                  {e.primary_industry && <div class="text-xs text-gray-400 dark:text-gray-500">{e.primary_industry}</div>}
+                </td>
+                <td class="px-4 py-3 text-right font-bold text-amber-600 dark:text-amber-400">{e.total_workers.toLocaleString()}</td>
+                <td class="px-4 py-3 text-right text-gray-500 dark:text-gray-400">{e.notice_count}</td>
+                <td class="px-4 py-3">
+                  {e.primary_state && <a href={`/state/${e.primary_state.toLowerCase()}`} class="text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400">{e.primary_state}</a>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Top 25 by Notices -->
+    <div id="panel-notices" class="hidden">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Top 25 Employers by Notice Count</h2>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              <th class="px-4 py-3 text-left">Rank</th>
+              <th class="px-4 py-3 text-left">Company</th>
+              <th class="px-4 py-3 text-right">Notices</th>
+              <th class="px-4 py-3 text-right">Total Workers</th>
+              <th class="px-4 py-3 text-left">State</th>
+            </tr>
+          </thead>
+          <tbody>
+            {byNotices.map((e, i) => (
+              <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <td class="px-4 py-3">
+                  <span class={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${i < 3 ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>{i + 1}</span>
+                </td>
+                <td class="px-4 py-3">
+                  <a href={`/employer/${e.slug}`} class="text-amber-600 dark:text-amber-400 hover:underline font-medium">{e.name}</a>
+                </td>
+                <td class="px-4 py-3 text-right font-bold text-gray-900 dark:text-gray-100">{e.notice_count}</td>
+                <td class="px-4 py-3 text-right text-amber-600 dark:text-amber-400">{e.total_workers.toLocaleString()}</td>
+                <td class="px-4 py-3">
+                  {e.primary_state && <a href={`/state/${e.primary_state.toLowerCase()}`} class="text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400">{e.primary_state}</a>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- By State -->
+    <div id="panel-states" class="hidden">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Top 25 States by Workers Affected</h2>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              <th class="px-4 py-3 text-left">Rank</th>
+              <th class="px-4 py-3 text-left">State</th>
+              <th class="px-4 py-3 text-right">Workers</th>
+              <th class="px-4 py-3 text-right">Notices</th>
+            </tr>
+          </thead>
+          <tbody>
+            {byState.map((s, i) => (
+              <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <td class="px-4 py-3 text-gray-400 dark:text-gray-500">{i + 1}</td>
+                <td class="px-4 py-3">
+                  <a href={`/state/${s.code.toLowerCase()}`} class="text-amber-600 dark:text-amber-400 hover:underline font-medium">{s.name}</a>
+                </td>
+                <td class="px-4 py-3 text-right font-bold text-amber-600 dark:text-amber-400">{s.total_workers.toLocaleString()}</td>
+                <td class="px-4 py-3 text-right text-gray-500 dark:text-gray-400">{s.total_notices}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- By Industry -->
+    <div id="panel-industries" class="hidden">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Industries by Workers Affected</h2>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              <th class="px-4 py-3 text-left">Rank</th>
+              <th class="px-4 py-3 text-left">Industry</th>
+              <th class="px-4 py-3 text-right">Workers</th>
+              <th class="px-4 py-3 text-right">Notices</th>
+            </tr>
+          </thead>
+          <tbody>
+            {byIndustry.map((ind, i) => (
+              <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <td class="px-4 py-3 text-gray-400 dark:text-gray-500">{i + 1}</td>
+                <td class="px-4 py-3">
+                  <a href={`/industry/${ind.slug}`} class="text-amber-600 dark:text-amber-400 hover:underline font-medium">{ind.name}</a>
+                </td>
+                <td class="px-4 py-3 text-right font-bold text-amber-600 dark:text-amber-400">{ind.total_workers.toLocaleString()}</td>
+                <td class="px-4 py-3 text-right text-gray-500 dark:text-gray-400">{ind.total_notices}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(name: string) {
+      const panels = ['workers', 'notices', 'states', 'industries'];
+      panels.forEach(p => {
+        const panel = document.getElementById(`panel-${p}`);
+        const btn = document.getElementById(`tab-${p}`);
+        if (p === name) {
+          panel?.classList.remove('hidden');
+          btn?.classList.add('border-amber-600', 'text-amber-700', 'dark:text-amber-400');
+          btn?.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        } else {
+          panel?.classList.add('hidden');
+          btn?.classList.remove('border-amber-600', 'text-amber-700', 'dark:text-amber-400');
+          btn?.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        }
+      });
+    }
+    (window as any).showTab = showTab;
+  </script>
+</Base>

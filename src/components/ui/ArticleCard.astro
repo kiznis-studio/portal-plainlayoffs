@@ -1,0 +1,70 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  href: string;
+  image?: string;
+  date?: string;
+  category?: string;
+  readTime?: string;
+}
+
+const { title, description, href, image, date, category, readTime } = Astro.props;
+
+const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+}) : null;
+---
+
+<article class="card group">
+  <a href={href} class="block hover:no-underline">
+    {image && (
+      <div class="aspect-video mb-4 overflow-hidden rounded-lg bg-[var(--color-border)]">
+        <img 
+          src={image} 
+          alt={title}
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+        />
+      </div>
+    )}
+    
+    <div class="space-y-2">
+      {category && (
+        <span class="inline-block text-xs font-medium text-[var(--color-accent)] uppercase tracking-wide">
+          {category}
+        </span>
+      )}
+      
+      <h2 class="text-lg font-semibold text-[var(--color-foreground)] group-hover:text-[var(--color-accent)] transition-colors line-clamp-2">
+        {title}
+      </h2>
+      
+      <p class="text-sm text-[var(--color-muted)] line-clamp-3">
+        {description}
+      </p>
+      
+      <div class="flex items-center gap-3 text-xs text-[var(--color-muted)]">
+        {formattedDate && <time datetime={date}>{formattedDate}</time>}
+        {readTime && <span>{readTime} read</span>}
+      </div>
+    </div>
+  </a>
+</article>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

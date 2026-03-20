@@ -1,0 +1,193 @@
+---
+import Base from '../layouts/Base.astro';
+import { getRawDb as getDb } from '../lib/db';
+
+export const prerender = false;
+
+const db = getDb();
+
+const aiStats = db.prepare(`
+  SELECT COUNT(*) as notices, SUM(num_employees) as workers, COUNT(DISTINCT employer_id) as employers
+  FROM notices WHERE is_ai_related = 1
+`).get() as { notices: number; workers: number; employers: number };
+
+const aiEmployers = db.prepare(`
+  SELECT e.slug, e.name, COUNT(n.id) as notices, SUM(n.num_employees) as workers,
+         e.primary_state, e.primary_industry, MIN(n.effective_date) as first_date, MAX(n.effective_date) as last_date
+  FROM notices n JOIN employers e ON n.employer_id = e.id
+  WHERE n.is_ai_related = 1
+  GROUP BY e.id ORDER BY workers DESC
+`).all() as { slug: string; name: string; notices: number; workers: number; primary_state: string; primary_industry: string; first_date: string; last_date: string }[];
+
+const aiByYear = db.prepare(`
+  SELECT strftime('%Y', effective_date) as year, COUNT(*) as notices, SUM(num_employees) as workers
+  FROM notices WHERE is_ai_related = 1
+  GROUP BY year ORDER BY year DESC
+`).all() as { year: string; notices: number; workers: number }[];
+
+const aiByIndustry = db.prepare(`
+  SELECT industry_name, COUNT(*) as notices, SUM(num_employees) as workers
+  FROM notices WHERE is_ai_related = 1 AND industry_name IS NOT NULL
+  GROUP BY industry_name ORDER BY workers DESC LIMIT 10
+`).all() as { industry_name: string; notices: number; workers: number }[];
+
+const title = 'AI-Related Layoffs — WARN Act Notices Linked to AI Automation';
+const description = `${aiStats?.workers?.toLocaleString() || 0} workers affected by AI-related mass layoffs. Track which companies are restructuring due to artificial intelligence and automation.`;
+---
+<Base title={title} description={description}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <ol class="flex items-center gap-2">
+        <li><a href="/" class="hover:text-amber-600 dark:hover:text-amber-400">Home</a></li>
+        <li>/</li>
+        <li class="text-gray-800 dark:text-gray-200 font-medium">AI-Related Layoffs</li>
+      </ol>
+    </nav>
+
+    <!-- Hero -->
+    <div class="bg-gradient-to-r from-blue-50 to-amber-50 dark:from-blue-900/20 dark:to-amber-900/20 rounded-xl p-8 mb-10 border border-blue-200 dark:border-blue-800">
+      <div class="flex items-start gap-4">
+        <div class="p-3 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+          <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">AI-Related Layoffs</h1>
+          <p class="text-gray-600 dark:text-gray-400 text-lg max-w-2xl">Tracking WARN Act notices from companies citing artificial intelligence, automation, or technology transformation as a factor in workforce reductions.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-3 gap-4 mb-10">
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
+        <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">{aiStats?.workers?.toLocaleString() || 0}</div>
+        <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">Workers Affected</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
+        <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">{aiStats?.notices || 0}</div>
+        <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">WARN Notices</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
+        <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">{aiStats?.employers || 0}</div>
+        <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">Companies</div>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <!-- Employers list -->
+      <div class="lg:col-span-2">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Companies with AI-Related Layoffs</h2>
+        {aiEmployers.length > 0 ? (
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  <th class="px-4 py-3 text-left">Company</th>
+                  <th class="px-4 py-3 text-right">Workers</th>
+                  <th class="px-4 py-3 text-right">Notices</th>
+                  <th class="px-4 py-3 text-left">Period</th>
+                </tr>
+              </thead>
+              <tbody>
+                {aiEmployers.map(e => (
+                  <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                    <td class="px-4 py-3">
+                      <a href={`/employer/${e.slug}`} class="text-amber-600 dark:text-amber-400 hover:underline font-medium">{e.name}</a>
+                      {e.primary_industry && <div class="text-xs text-gray-400 dark:text-gray-500">{e.primary_industry}</div>}
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100">{e.workers.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-right text-gray-500 dark:text-gray-400">{e.notices}</td>
+                    <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
+                      {e.first_date?.split('T')[0]?.substring(0, 7)}
+                      {e.first_date !== e.last_date && ` – ${e.last_date?.split('T')[0]?.substring(0, 7)}`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-6 text-center border border-amber-200 dark:border-amber-800">
+            <p class="text-amber-700 dark:text-amber-300">AI-related layoff classification is expanding as more data is added.</p>
+          </div>
+        )}
+
+        <!-- Context section -->
+        <div class="mt-8 prose dark:prose-invert max-w-none">
+          <h2>Understanding AI-Related Layoffs</h2>
+          <p>The WARN Act requires companies to give 60 days advance notice of mass layoffs affecting 50 or more workers (100+ at larger companies). While notices don't always specify the reason for layoffs, industry analysts and news reports help identify when artificial intelligence or automation is a contributing factor.</p>
+          <p>Common patterns in AI-related workforce reductions include: technology companies restructuring after AI product launches, roles replaced by AI-assisted workflows, and companies investing AI cost savings into smaller, more technical teams.</p>
+          <h3>Key Sectors Affected</h3>
+          <ul>
+            <li><strong>Technology</strong> — Software developers, customer support roles, and middle management affected by AI automation tools</li>
+            <li><strong>Finance</strong> — Document processing, compliance review, and data analysis roles automated</li>
+            <li><strong>Media & Publishing</strong> — Content creation and research roles supplemented by generative AI</li>
+            <li><strong>Retail & Logistics</strong> — Customer service, demand forecasting, and inventory management automation</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <!-- By year -->
+        {aiByYear.length > 0 && (
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-4 text-sm">By Year</h3>
+            <div class="space-y-2">
+              {aiByYear.map(y => (
+                <div class="flex justify-between items-center text-sm">
+                  <a href={`/year/${y.year}`} class="text-amber-600 dark:text-amber-400 hover:underline font-medium">{y.year}</a>
+                  <span class="text-gray-500 dark:text-gray-400">{y.workers.toLocaleString()} workers</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- By industry -->
+        {aiByIndustry.length > 0 && (
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-4 text-sm">By Industry</h3>
+            <div class="space-y-2">
+              {aiByIndustry.map(ind => (
+                <div class="flex justify-between items-center text-sm">
+                  <span class="text-gray-700 dark:text-gray-300">{ind.industry_name}</span>
+                  <span class="text-gray-500 dark:text-gray-400">{ind.workers.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- Cross-links -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-5 border border-blue-200 dark:border-blue-800">
+          <h3 class="font-semibold text-blue-800 dark:text-blue-200 mb-3 text-sm">Related Intelligence</h3>
+          <div class="space-y-2">
+            <a href="https://plainworkforce.com" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 hover:underline">
+              <span>→</span> AI Job Exposure by Occupation
+            </a>
+            <a href="https://wagedex.com" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 hover:underline">
+              <span>→</span> Salary Data by Occupation
+            </a>
+            <a href="https://plainlabor.com" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 hover:underline">
+              <span>→</span> Labor Market Trends (BLS)
+            </a>
+          </div>
+        </div>
+
+        <!-- Guide links -->
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-5">
+          <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3 text-sm">Guides</h3>
+          <div class="space-y-2">
+            <a href="/guides/warn-act-employee-rights" class="block text-sm text-amber-600 dark:text-amber-400 hover:underline">Your Rights Under the WARN Act</a>
+            <a href="/guides/surviving-a-layoff" class="block text-sm text-amber-600 dark:text-amber-400 hover:underline">What To Do After a Layoff</a>
+            <a href="/guides/understanding-mass-layoffs" class="block text-sm text-amber-600 dark:text-amber-400 hover:underline">Understanding Mass Layoffs</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Base>
