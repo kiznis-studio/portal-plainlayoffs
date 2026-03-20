@@ -29,16 +29,16 @@ const monthStats = db.prepare(`
 `).all(yearNum) as { month: number; total_workers: number; total_notices: number }[];
 
 const topEmployers = db.prepare(`
-  SELECT e.slug, e.name, SUM(n.num_employees) as total_workers, COUNT(n.id) as notice_count
+  SELECT e.slug, e.name, SUM(n.workers_affected) as total_workers, COUNT(n.id) as notice_count
   FROM notices n JOIN employers e ON n.employer_id = e.id
   WHERE strftime('%Y', n.effective_date) = ?
   GROUP BY e.id ORDER BY total_workers DESC LIMIT 20
 `).all(String(yearNum)) as { slug: string; name: string; total_workers: number; notice_count: number }[];
 
 const topIndustries = db.prepare(`
-  SELECT industry_slug, industry_name, SUM(num_employees) as workers, COUNT(id) as notices
-  FROM notices WHERE strftime('%Y', effective_date) = ? AND industry_slug IS NOT NULL
-  GROUP BY industry_slug ORDER BY workers DESC LIMIT 10
+  SELECT naics as industry_slug, industry as industry_name, SUM(workers_affected) as workers, COUNT(id) as notices
+  FROM notices WHERE strftime('%Y', effective_date) = ? AND industry IS NOT NULL
+  GROUP BY industry ORDER BY workers DESC LIMIT 10
 `).all(String(yearNum)) as { industry_slug: string; industry_name: string; workers: number; notices: number }[];
 
 const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];

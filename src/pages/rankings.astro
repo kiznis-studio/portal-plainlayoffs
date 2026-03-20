@@ -7,13 +7,13 @@ export const prerender = false;
 const db = getDb();
 
 const byWorkers = db.prepare(`
-  SELECT slug, name, total_workers, notice_count, primary_state, primary_industry
+  SELECT slug, name, total_workers, total_notices as notice_count, primary_state, primary_industry
   FROM employers ORDER BY total_workers DESC LIMIT 25
 `).all() as { slug: string; name: string; total_workers: number; notice_count: number; primary_state: string; primary_industry: string }[];
 
 const byNotices = db.prepare(`
-  SELECT slug, name, total_workers, notice_count, primary_state, primary_industry
-  FROM employers ORDER BY notice_count DESC LIMIT 25
+  SELECT slug, name, total_workers, total_notices as notice_count, primary_state, primary_industry
+  FROM employers ORDER BY total_notices DESC LIMIT 25
 `).all() as { slug: string; name: string; total_workers: number; notice_count: number; primary_state: string; primary_industry: string }[];
 
 const byState = db.prepare(`

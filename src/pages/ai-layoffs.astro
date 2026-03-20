@@ -7,28 +7,28 @@ export const prerender = false;
 const db = getDb();
 
 const aiStats = db.prepare(`
-  SELECT COUNT(*) as notices, SUM(num_employees) as workers, COUNT(DISTINCT employer_id) as employers
-  FROM notices WHERE is_ai_related = 1
+  SELECT COUNT(*) as notices, SUM(workers_affected) as workers, COUNT(DISTINCT employer_id) as employers
+  FROM notices WHERE ai_caused = 1
 `).get() as { notices: number; workers: number; employers: number };
 
 const aiEmployers = db.prepare(`
-  SELECT e.slug, e.name, COUNT(n.id) as notices, SUM(n.num_employees) as workers,
+  SELECT e.slug, e.name, COUNT(n.id) as notices, SUM(n.workers_affected) as workers,
          e.primary_state, e.primary_industry, MIN(n.effective_date) as first_date, MAX(n.effective_date) as last_date
   FROM notices n JOIN employers e ON n.employer_id = e.id
-  WHERE n.is_ai_related = 1
+  WHERE n.ai_caused = 1
   GROUP BY e.id ORDER BY workers DESC
 `).all() as { slug: string; name: string; notices: number; workers: number; primary_state: string; primary_industry: string; first_date: string; last_date: string }[];
 
 const aiByYear = db.prepare(`
-  SELECT strftime('%Y', effective_date) as year, COUNT(*) as notices, SUM(num_employees) as workers
-  FROM notices WHERE is_ai_related = 1
+  SELECT strftime('%Y', effective_date) as year, COUNT(*) as notices, SUM(workers_affected) as workers
+  FROM notices WHERE ai_caused = 1
   GROUP BY year ORDER BY year DESC
 `).all() as { year: string; notices: number; workers: number }[];
 
 const aiByIndustry = db.prepare(`
-  SELECT industry_name, COUNT(*) as notices, SUM(num_employees) as workers
-  FROM notices WHERE is_ai_related = 1 AND industry_name IS NOT NULL
-  GROUP BY industry_name ORDER BY workers DESC LIMIT 10
+  SELECT industry as industry_name, COUNT(*) as notices, SUM(workers_affected) as workers
+  FROM notices WHERE ai_caused = 1 AND industry IS NOT NULL
+  GROUP BY industry ORDER BY workers DESC LIMIT 10
 `).all() as { industry_name: string; notices: number; workers: number }[];
 
 const title = 'AI-Related Layoffs — WARN Act Notices Linked to AI Automation';
