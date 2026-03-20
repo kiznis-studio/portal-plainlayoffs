@@ -29,6 +29,35 @@ const states = [...statesSet].sort();
 
 const title = `${employer.name} Layoff History — WARN Act Notices`;
 const desc = `${employer.name} WARN Act layoff history: ${employer.total_notices} notice${employer.total_notices !== 1 ? 's' : ''}, ${employer.total_workers.toLocaleString()} workers affected across ${employer.state_count} state${employer.state_count !== 1 ? 's' : ''}.`;
+
+const avgWorkers = employer.total_notices > 0 ? Math.round(employer.total_workers / employer.total_notices) : 0;
+const faqItems = [
+  {
+    q: `Is ${employer.name} laying off workers?`,
+    a: `${employer.name} has filed ${employer.total_notices} WARN Act notice${employer.total_notices !== 1 ? 's' : ''} affecting ${employer.total_workers.toLocaleString()} workers across ${employer.state_count} state${employer.state_count !== 1 ? 's' : ''}. The most recent notice was filed ${employer.latest_notice_date ? 'on ' + formatDate(employer.latest_notice_date) : 'at an unknown date'}.`
+  },
+  {
+    q: `How many people has ${employer.name} laid off?`,
+    a: `According to WARN Act filings, ${employer.name} has affected ${employer.total_workers.toLocaleString()} workers total, averaging ${avgWorkers.toLocaleString()} workers per notice.`
+  },
+  {
+    q: `What states has ${employer.name} had layoffs in?`,
+    a: `${employer.name} has filed WARN notices in ${employer.state_count} state${employer.state_count !== 1 ? 's' : ''}: ${states.join(', ')}.`
+  },
+  {
+    q: `What is a WARN Act notice?`,
+    a: `The Worker Adjustment and Retraining Notification (WARN) Act requires employers with 100+ employees to provide 60 days advance notice of plant closings and mass layoffs affecting 50 or more workers. Not all layoffs require WARN notice.`
+  },
+];
+const faqSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqItems.map(item => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+});
 ---
 
 <Base title={title} description={desc} breadcrumbs={[
@@ -128,8 +157,47 @@ const desc = `${employer.name} WARN Act layoff history: ${employer.total_notices
         </div>
       ))}
     </div>
+
+    <!-- Narrative: Interpreting Layoff Patterns -->
+    <section class="mb-8">
+      <div class="p-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+        <h2 class="font-semibold mb-3">Understanding {employer.name}'s Layoff History</h2>
+        <p class="text-sm text-[var(--color-muted)] leading-relaxed mb-3">
+          {employer.total_notices > 5
+            ? `${employer.name} has a substantial history of WARN Act filings with ${employer.total_notices} notices, suggesting recurring workforce restructuring. Companies with multiple notices often operate in cyclical industries or undergo periodic reorganization as business conditions change.`
+            : employer.total_notices > 1
+            ? `${employer.name} has filed ${employer.total_notices} WARN Act notices, indicating multiple rounds of workforce reductions. This pattern may reflect industry downturns, strategic restructuring, or regional facility consolidation.`
+            : `${employer.name} has one WARN Act filing on record. A single notice may reflect an isolated restructuring event, facility closure, or response to changing market conditions.`}
+        </p>
+        <p class="text-sm text-[var(--color-muted)] leading-relaxed">
+          {avgWorkers > 500
+            ? `With an average of ${avgWorkers.toLocaleString()} workers per notice, these are large-scale events that can significantly impact local economies and labor markets.`
+            : avgWorkers > 100
+            ? `Each notice has affected an average of ${avgWorkers.toLocaleString()} workers, representing moderately sized workforce reductions.`
+            : `The notices have affected an average of ${avgWorkers.toLocaleString()} workers each, suggesting targeted departmental or facility-level changes.`}
+          WARN Act notices only capture layoffs meeting federal thresholds (50+ workers) and may not represent all workforce changes.
+        </p>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="mb-8">
+      <h2 class="text-xl font-bold mb-4">Frequently Asked Questions</h2>
+      <div class="space-y-3">
+        {faqItems.map(item => (
+          <details class="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] group">
+            <summary class="cursor-pointer font-medium flex justify-between items-center">
+              {item.q}
+              <span class="ml-2 text-[var(--color-muted)] group-open:rotate-180 transition-transform">&#9660;</span>
+            </summary>
+            <p class="mt-3 text-sm text-[var(--color-muted)]">{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
   </div>
 
+  <script type="application/ld+json" set:html={faqSchema} />
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@type": "Dataset",
