@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import sentry from '@sentry/astro';
+import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import node from '@astrojs/node';
 
@@ -15,6 +16,7 @@ export default defineConfig({
     build: { target: 'es2022' },
   },
   integrations: [
+    sitemap(),
     sentry({
       dsn: 'https://f17f07051a08ff2ea4df318238c7b370@o4510827630231552.ingest.de.sentry.io/4511076741349456',
       sourceMapsUploadOptions: { enabled: false },
