@@ -133,6 +133,8 @@ const desc = `${state.name} mass layoff data: ${state.total_notices} WARN notice
     "name": `${state.name} WARN Act Layoff Data`,
     "description": desc,
     "url": new URL(Astro.url.pathname, 'https://plainlayoffs.com').href,
-    "spatialCoverage": { "@type": "Place", "name": state.name, "address": { "@type": "PostalAddress", "addressRegion": stateCode, "addressCountry": "US" } }
+    "creator": { "@type": "Organization", "name": "PlainLayoffs" },
+    "spatialCoverage": state.name,
+    "license": "https://creativecommons.org/publicdomain/zero/1.0/"
   })} />
 </Base>
