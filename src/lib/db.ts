@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { createD1Adapter } from './d1-adapter';
 import type { D1Database } from './d1-adapter';
+import { persistToDisk, loadFromDisk, warmFromDisk } from './disk-cache';
 
 const DB_PATH = process.env.DB_PATH || '/data/portal.db';
 
@@ -34,6 +35,13 @@ const queryCache = new Map<string, unknown>();
 
 export function cached<T>(key: string, fn: () => Promise<T>): Promise<T> {
   if (queryCache.has(key)) return Promise.resolve(queryCache.get(key) as T);
+
+  // T19: Disk fallback — survives process restart within container
+  const fromDisk = loadFromDisk<T>(key);
+  if (fromDisk !== null) {
+    queryCache.set(key, fromDisk);
+    return Promise.resolve(fromDisk);
+  }
   return fn().then(v => { queryCache.set(key, v); return v; });
 }
 
