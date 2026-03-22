@@ -27,7 +27,7 @@ const years = Object.keys(byYear).map(Number).sort((a,b) => b-a);
 const statesSet = new Set(notices.map(n => n.state));
 const states = [...statesSet].sort();
 
-const title = `${employer.name} Layoff History — WARN Act Notices`;
+const title = `${employer.name} — ${employer.total_workers.toLocaleString()} Workers Affected, ${employer.total_notices} WARN Notice${employer.total_notices !== 1 ? 's' : ''} | PlainLayoffs`;
 const desc = `${employer.name} WARN Act layoff history: ${employer.total_notices} notice${employer.total_notices !== 1 ? 's' : ''}, ${employer.total_workers.toLocaleString()} workers affected across ${employer.state_count} state${employer.state_count !== 1 ? 's' : ''}.`;
 
 const avgWorkers = employer.total_notices > 0 ? Math.round(employer.total_workers / employer.total_notices) : 0;
@@ -77,6 +77,30 @@ const faqSchema = JSON.stringify({
       </nav>
       <h1 class="text-3xl font-bold text-[var(--color-foreground)]">{employer.name}</h1>
       <p class="text-[var(--color-muted)] mt-2">WARN Act Layoff History</p>
+    </div>
+
+    <!-- DAB: Data-at-a-Glance -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+      <div>
+        <div class="text-xs text-[var(--color-muted)] mb-0.5">Employer</div>
+        <div class="font-semibold text-[var(--color-foreground)] text-sm leading-tight">{employer.name}</div>
+      </div>
+      <div>
+        <div class="text-xs text-[var(--color-muted)] mb-0.5">Workers Affected</div>
+        <div class="text-xl font-bold text-amber-600 dark:text-amber-400">{employer.total_workers.toLocaleString()}</div>
+      </div>
+      <div>
+        <div class="text-xs text-[var(--color-muted)] mb-0.5">WARN Notices</div>
+        <div class="text-xl font-bold text-[var(--color-foreground)]">{employer.total_notices}</div>
+      </div>
+      <div>
+        <div class="text-xs text-[var(--color-muted)] mb-0.5">Most Recent Notice</div>
+        <div class="font-semibold text-[var(--color-foreground)] text-sm">{employer.latest_notice_date ? formatDate(employer.latest_notice_date) : '—'}</div>
+      </div>
+      <div>
+        <div class="text-xs text-[var(--color-muted)] mb-0.5">Primary State</div>
+        <div class="font-semibold text-[var(--color-foreground)] text-sm">{employer.primary_state || '—'}</div>
+      </div>
     </div>
 
     <!-- Stats cards -->
