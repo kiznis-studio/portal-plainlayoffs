@@ -21,7 +21,7 @@ interface Props {
 
 const props = Astro.props;
 const siteName = "PlainLayoffs"; // TODO: Load from config
-const fullTitle = props.title === siteName ? props.title : `${props.title} | ${siteName}`;
+const fullTitle = props.title.startsWith(siteName) ? props.title : `${props.title} | ${siteName}`;
 const breadcrumbSchema = (() => {
   const path = Astro.url.pathname.replace(/\/$/, '');
   if (path === '' || path === '/') return null;
