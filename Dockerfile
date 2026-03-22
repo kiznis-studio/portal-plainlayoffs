@@ -29,6 +29,7 @@ COPY --from=builder --chown=app:app /app/package.json ./
 # If portal uses OG image generation with fonts, add:
 # COPY --from=builder --chown=app:app /app/src/assets ./src/assets
 COPY --chown=app:app cluster-entry.mjs ./
+COPY --chown=app:app warmer.mjs ./
 COPY --chown=app:app memory-budget.mjs ./
 USER app
 ENV HOST=0.0.0.0
