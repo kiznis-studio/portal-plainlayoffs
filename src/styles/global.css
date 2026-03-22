@@ -25,6 +25,20 @@
   --color-card: #1e293b;
 }
 
+/* Smooth dark/light mode transitions — prevents jarring snap on toggle.
+   Applied to key properties that change between modes. The 200ms duration
+   is fast enough to feel responsive but smooth enough to not flash.
+   IMPORTANT: The inline dark mode script in Base.astro adds .dark BEFORE
+   first paint, so there is no flash on page load — transitions only fire
+   on user-initiated toggle clicks. */
+html {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+body, header, footer, .card, nav, main, section {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
 /* Base styles */
 body {
   background-color: var(--color-background);
